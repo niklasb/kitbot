@@ -2,7 +2,6 @@ $: << File.expand_path('..', __FILE__)
 
 require 'ircbot'
 require 'open-uri'
-require 'htmlentities'
 require 'mechanize'
 
 MAX_HISTORY = 20
@@ -15,10 +14,9 @@ end
 
 agent = Mechanize.new
 bot.add_command /(https?:\/\/\S+)/, 'HTTP URLs (will fetch title)' do |bot, where, from, url|
-  if agent.get(url).content =~ /<title>(.*?)<\/title>/mi
-    title = HTMLEntities.new.decode($1.gsub(/\s+/, ' ').strip)
-    bot.say "Title: %s" % title, where
-  end
+  page = agent.get(url)
+  title = page.at('title').text.gsub(/\s+/, ' ').strip
+  bot.say "Title: %s" % title, where
 end
 
 # implement logging, as the substitution mechanism depends on it :)
