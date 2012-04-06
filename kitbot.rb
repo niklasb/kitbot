@@ -60,7 +60,7 @@ end
 
 bot.add_command /^.stats$/, '.stats' do |bot, where|
   users_count = user_stats[where].map { |user, stats| [user, stats[:letter_count]] }
-  top = users_count.sort_by { |user, count| -count }[0..TOP]
+  top = users_count.sort_by { |user, count| -count }[0..$top_users]
   str = top.map { |x| "%s (%d)" % x }.join(", ")
   bot.say "Top users (letter count-wise): %s" % str, where
 end
