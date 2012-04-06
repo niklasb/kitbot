@@ -62,19 +62,17 @@ end
 
 # interactive shell
 Thread.new(bot) do |bot|
-  loop do
-    begin
-      binding.pry
-    rescue
-    end
-  end
-end
-
-begin
   bot.connect("irc.freenode.org")
   bot.join("#kitinfo")
   bot.main_loop
-ensure
-  # write data to config
-  open(CONFIG_FILE, 'wb') { |f| f.write({ :letters => letters }.to_yaml) }
 end
+
+loop do
+  begin
+    binding.pry
+  rescue Exception
+  end
+end
+
+# write data to config
+open(CONFIG_FILE, 'wb') { |f| f.write({ :letters => letters }.to_yaml) }
