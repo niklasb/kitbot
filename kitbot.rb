@@ -42,12 +42,12 @@ bot.add_command /(.*)/ do |bot, where, from, msg|
   chanhist = history[where]
   chanhist << [Time.now, from, msg]
   history[where] = chanhist[-MAX_HISTORY..-1] if chanhist.size > MAX_HISTORY
-  letters[where][user] += msg.size
+  letters[where][from] += msg.size
 end
 
 bot.add_command /^.stats$/, '.stats' do |bot, where|
-  top = letters[where].sort_by { |user, count| -count }[0..TOP]
-  str = top.map { x "%s (%d)" % x }.join(", ")
+  top = letters[where].sort_by { |_, count| -count }[0..TOP]
+  str = top.map { |x| "%s (%d)" % x }.join(", ")
   bot.say "Top users (letter count-wise): %s" % str, where
 end
 
@@ -60,19 +60,14 @@ bot.add_command /^s?\/([^\/]*)\/([^\/]*)\/?$/, 's/x/y/ substitution' do |bot, wh
   end
 end
 
-# interactive shell
 Thread.new(bot) do |bot|
   bot.connect("irc.freenode.org")
   bot.join("#kitinfo")
   bot.main_loop
 end
 
-loop do
-  begin
-    binding.pry
-  rescue Exception
-  end
-end
+# interactive shell
+binding.pry
 
 # write data to config
 open(CONFIG_FILE, 'wb') { |f| f.write({ :letters => letters }.to_yaml) }
