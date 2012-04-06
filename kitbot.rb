@@ -13,6 +13,7 @@ bot.add_command /^.time$/, '.time' do |bot, where, from|
 end
 
 agent = Mechanize.new
+agent.user_agent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)"
 bot.add_command /(https?:\/\/\S+)/, 'HTTP URLs (will fetch title)' do |bot, where, from, url|
   page = agent.get(url)
   title = page.at('title').text.gsub(/\s+/, ' ').strip
