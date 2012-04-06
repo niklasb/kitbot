@@ -60,12 +60,12 @@ end
 
 # single user stats
 bot.add_command /^.seen\s+(\S+)$/, '.seen' do |bot, where, from, query|
-  result = user_stats[where].find { |name, _| name.include?(query) }
+  result = user_stats[where].find { |name, _| name.downcase.include?(query.downcase) }
   if result
     name, stats = result
-    bot.say "Last seen at %s: '<%s> %s'" % [stats[:last_seen].strftime("%Y/%m/%d %H:%M"),
-                                            name,
-                                            stats[:last_msg]], where
+    bot.say "Last seen at %s: <%s> %s" % [stats[:last_seen].strftime("%Y/%m/%d %H:%M"),
+                                          name,
+                                          stats[:last_msg]], where
   else
     bot.say "Nope :(", where
   end
