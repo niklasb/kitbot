@@ -12,15 +12,15 @@ rescue
   {}
 end
 
-@max_history = 100
-@top_users = 5
-@config_file = "config.yml"
-@nick = "Kitbot"
-@server = "irc.freenode.org"
-@channels = ["#kitinfo"]
+$max_history = 100
+$top_users = 5
+$config_file = "config.yml"
+$nick = "Kitbot"
+$server = "irc.freenode.org"
+$channels = ["#kitinfo"]
 
-config = load_yaml_hash(@config_file)
-bot = IrcBot.new(@nick)
+config = load_yaml_hash($config_file)
+bot = IrcBot.new($nick)
 
 bot.add_command /^.time$/, '.time' do |bot, where, from|
   bot.say "Time: %s" % Time.now, where
@@ -49,7 +49,7 @@ bot.add_command /(.*)/ do |bot, where, from, msg|
   chanhist << [Time.now, from, msg]
 
   # trim history to configured backlog size
-  history[where] = chanhist[-MAX_HISTORY..-1] if chanhist.size > MAX_HISTORY
+  history[where] = chanhist[-$max_history..-1] if chanhist.size > $max_history
 
   # update user stats
   stats = user_stats[where][from]
@@ -75,8 +75,8 @@ bot.add_command /^s?\/([^\/]*)\/([^\/]*)\/?$/, 's/x/y/ substitution' do |bot, wh
 end
 
 Thread.new(bot) do |bot|
-  bot.connect("irc.freenode.org")
-  bot.join("#kitinfo")
+  bot.connect($server)
+  $channels.each { |chan| bot.join(chan) }
   bot.main_loop
 end
 
@@ -84,4 +84,4 @@ end
 binding.pry
 
 # write data to config
-open(CONFIG_FILE, 'wb') { |f| f.write({ :user_stats => user_stats }.to_yaml) }
+open($config_file, 'wb') { |f| f.write({ :user_stats => user_stats }.to_yaml) }
