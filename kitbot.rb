@@ -12,12 +12,15 @@ rescue
   {}
 end
 
-MAX_HISTORY = 100
-TOP = 5
-CONFIG_FILE = "config.yml"
+@max_history = 100
+@top_users = 5
+@config_file = "config.yml"
+@nick = "Kitbot"
+@server = "irc.freenode.org"
+@channels = ["#kitinfo"]
 
-config = load_yaml_hash(CONFIG_FILE)
-bot = IrcBot.new("Kitbot")
+config = load_yaml_hash(@config_file)
+bot = IrcBot.new(@nick)
 
 bot.add_command /^.time$/, '.time' do |bot, where, from|
   bot.say "Time: %s" % Time.now, where
@@ -33,20 +36,31 @@ end
 
 # implement logging, as the substitution mechanism and stats depend on it :)
 history = Hash.new { |h,k| h[k] = [] }
-letters = Hash.new { |h,k| h[k] = Hash.new(0) }
+user_stats = Hash.new { |h,k| h[k] = Hash.new { |h,k| h[k] = { :letter_count => 0 }}}
+# merge data from file
 (config[:letters] || {}).each do |chan,users|
-  letters[chan].merge! users
+  users.each do { |user,stats|
+    user_stats[chan][user].merge! stats
+  end
 end
 
 bot.add_command /(.*)/ do |bot, where, from, msg|
   chanhist = history[where]
   chanhist << [Time.now, from, msg]
+
+  # trim history to configured backlog size
   history[where] = chanhist[-MAX_HISTORY..-1] if chanhist.size > MAX_HISTORY
-  letters[where][from] += msg.size
+
+  # update user stats
+  stats = user_stats[where][from]
+  stats[:letter_count] += msg.size
+  stats[:last_seen] = Time.now
+  stats[:last_msg] = msg
 end
 
 bot.add_command /^.stats$/, '.stats' do |bot, where|
-  top = letters[where].sort_by { |_, count| -count }[0..TOP]
+  users_count = user_stats[where].map { |user, stats| [user, stats[:letter_count]] }
+  top = users_count.sort_by { |user, count| -count }[0..TOP]
   str = top.map { |x| "%s (%d)" % x }.join(", ")
   bot.say "Top users (letter count-wise): %s" % str, where
 end
@@ -70,4 +84,4 @@ end
 binding.pry
 
 # write data to config
-open(CONFIG_FILE, 'wb') { |f| f.write({ :letters => letters }.to_yaml) }
+open(CONFIG_FILE, 'wb') { |f| f.write({ :user_stats => user_stats }.to_yaml) }
