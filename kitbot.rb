@@ -3,40 +3,39 @@ $: << File.expand_path('..', __FILE__)
 require 'ircbot'
 require 'open-uri'
 require 'htmlentities'
+require 'mechanize'
 
 MAX_HISTORY = 20
 
-if __FILE__ == $0
-  bot = IrcBot.new("Kitbot")
+bot = IrcBot.new("Kitbot")
 
-  bot.add_command /^.time$/, '.time' do |bot, where, from|
-    bot.say "Time: %s" % Time.now, where
-  end
-
-  bot.add_command /(http:\/\/\S+)/, 'HTTP URLs (will fetch title)' do |bot, where, from, url|
-    body = open(url) { |f| f.read }
-    if body =~ /<title>(.*?)<\/title>/mi
-      title = HTMLEntities.new.decode($1.gsub(/\s+/, ' ').strip)
-      bot.say "Title: %s" % title, where
-    end
-  end
-
-  # implement logging, as the substitution mechanism depends on it :)
-  history = Hash.new { |h,k| h[k] = [] }
-
-  bot.add_command /(.*)/ do |bot, where, from, msg|
-    chanhist = history[where]
-    chanhist << [Time.now, from, msg]
-    history[where] = chanhist[-MAX_HISTORY..-1] if chanhist.size > MAX_HISTORY
-  end
-
-  bot.add_command /^s?\/([^\/]*)\/([^\/]*)\/?$/, 's/x/y/ substitution' do |bot, where, from, pattern, subst|
-    pattern = Regexp.new(pattern)
-    time, from, msg = history[where].reverse.drop(1).find { |_, _, m| m =~ pattern }
-    bot.say "<%s> %s" % [from, msg.gsub(pattern, subst)], where
-  end
-
-  bot.connect("irc.freenode.org")
-  bot.join("#kitinfo")
-  bot.main_loop
+bot.add_command /^.time$/, '.time' do |bot, where, from|
+  bot.say "Time: %s" % Time.now, where
 end
+
+agent = Mechanize.new
+bot.add_command /(https?:\/\/\S+)/, 'HTTP URLs (will fetch title)' do |bot, where, from, url|
+  if agent.get(url).content =~ /<title>(.*?)<\/title>/mi
+    title = HTMLEntities.new.decode($1.gsub(/\s+/, ' ').strip)
+    bot.say "Title: %s" % title, where
+  end
+end
+
+# implement logging, as the substitution mechanism depends on it :)
+history = Hash.new { |h,k| h[k] = [] }
+
+bot.add_command /(.*)/ do |bot, where, from, msg|
+  chanhist = history[where]
+  chanhist << [Time.now, from, msg]
+  history[where] = chanhist[-MAX_HISTORY..-1] if chanhist.size > MAX_HISTORY
+end
+
+bot.add_command /^s?\/([^\/]*)\/([^\/]*)\/?$/, 's/x/y/ substitution' do |bot, where, from, pattern, subst|
+  pattern = Regexp.new(pattern)
+  time, from, msg = history[where].reverse.drop(1).find { |_, _, m| m =~ pattern }
+  bot.say "<%s> %s" % [from, msg.gsub(pattern, subst)], where
+end
+
+bot.connect("irc.freenode.org")
+bot.join("#kitinfo")
+bot.main_loop
