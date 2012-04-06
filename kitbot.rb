@@ -62,7 +62,12 @@ end
 
 # interactive shell
 Thread.new(bot) do |bot|
-  binding.pry
+  loop do
+    begin
+      binding.pry
+    rescue
+    end
+  end
 end
 
 begin
