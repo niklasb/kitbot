@@ -31,8 +31,11 @@ end
 
 bot.add_command /^s?\/([^\/]*)\/([^\/]*)\/?$/, 's/x/y/ substitution' do |bot, where, from, pattern, subst|
   pattern = Regexp.new(pattern)
-  time, from, msg = history[where].reverse.drop(1).find { |_, _, m| m =~ pattern }
-  bot.say "<%s> %s" % [from, msg.gsub(pattern, subst)], where
+  result = history[where].reverse.drop(1).find { |_, f, m| f == from && m =~ pattern }
+  if result
+    time, from, msg = result
+    bot.say "<%s> %s" % [from, msg.gsub(pattern, subst)], where
+  end
 end
 
 bot.connect("irc.freenode.org")
