@@ -25,8 +25,9 @@ bot = IrcBot.new($nick)
 # set up logging, as the substitution mechanism and stats depend on it :)
 history = Hash.new { |h,k| h[k] = [] }
 user_stats = Hash.new { |h,k| h[k] = Hash.new { |h,k| h[k] = { :letter_count => 0 }}}
+
 # merge data from file
-(config[:letters] || {}).each do |chan,users|
+config[:user_stats].each do |chan,users|
   users.each do |user, stats|
     user_stats[chan][user].merge! stats
   end
