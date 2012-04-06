@@ -54,8 +54,8 @@ bot.add_command /(.*)/ do |bot, where, from, msg|
   # update user stats
   stats = user_stats[where][from]
   stats[:letter_count] += msg.size
-  stats[:last_seen] = Time.now
   stats[:last_msg] = msg
+  stats[:last_seen] = Time.now
 end
 
 bot.add_command /^.stats$/, '.stats' do |bot, where|
@@ -71,6 +71,18 @@ bot.add_command /^s?\/([^\/]*)\/([^\/]*)\/?$/, 's/x/y/ substitution' do |bot, wh
   if result
     time, from, msg = result
     bot.say "<%s> %s" % [from, msg.gsub(pattern, subst)], where
+  end
+end
+
+bot.add_command /^.seen\s+(\S+)$/, '.seen' do |bot, where, from, query|
+  result = user_stats[where].find { |name, _| name.include?(query) }
+  if result
+    name, stats = result
+    bot.say "Last seen at %s: '<%s> %s'" % [stats[:last_seen].strftime("%Y/%m/%d %H:%M"),
+                                            name,
+                                            stats[:last_msg]], where
+  else
+    bot.say "Nope :(", where
   end
 end
 
