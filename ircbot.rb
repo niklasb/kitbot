@@ -1,6 +1,7 @@
 require 'socket'
 require 'test/unit/assertions'
 require 'set'
+require 'dynamic_binding'
 
 class IrcError < Exception ; end
 
@@ -22,8 +23,11 @@ class IrcBot
   def initialize(nick)
     @nick = nick
     @conn = nil
-    @commands = []
-    add_command /^.help$/, ".help", &method(:help)
+    commands = @commands = []
+    add_command /^.help$/, ".help" do
+      say_chan "I understand: %s" % commands.map { |_,h,_| h }
+                                            .reject(&:nil?).join(', ')
+    end
   end
 
   def assert_connected
@@ -131,11 +135,6 @@ class IrcBot
     @commands << [pattern, help, block]
   end
 
-  def help(bot, where, from)
-    helps = @commands.map { |_,h,_| h }
-    bot.say "I understand: %s" % helps.reject(&:nil?).join(', '), where
-  end
-
   def handle_msg(from, where, msg)
     # don't react to self
     return if from == @nick
@@ -143,10 +142,17 @@ class IrcBot
     query = where == @nick
     where = from if query
 
+    # prepare execution context for the command blocks
+    stack = DynamicBinding::LookupStack.new
+    stack.push_instance(self)
+    stack.push_hash(:msg => msg, :where => where,
+                    :from => from, :query => query)
+    stack.push_method(:say_chan, lambda { |msg| say(msg, where) }, self)
+
     @commands.each do |pattern, help, block|
       next unless msg =~ pattern
       begin
-        block.call(self, where, from, *$~.captures)
+        stack.run_proc(block, *$~.captures)
       rescue => e
         $stderr.puts "Error while executing command %s: %s" % [help, e.inspect]
         $stderr.puts e.backtrace

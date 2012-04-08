@@ -34,7 +34,7 @@ config[:user_stats].each do |chan,users|
 end
 
 # log
-bot.add_command /(.*)/ do |bot, where, from, msg|
+bot.add_command // do
   chanhist = history[where]
   chanhist << [Time.now, from, msg]
 
@@ -52,42 +52,42 @@ end
 #========================
 
 # highscore by letter count
-bot.add_command /^.stats$/, '.stats' do |bot, where|
+bot.add_command /^.stats$/, '.stats' do
   users_count = user_stats[where].map { |user, stats| [user, stats[:letter_count]] }
   top = users_count.sort_by { |user, count| -count }[0..$top_users]
   str = top.map { |x| "%s (%d)" % x }.join(", ")
-  bot.say "Top users (letter count-wise): %s" % str, where
+  say_chan "Top users (letter count-wise): %s" % str
 end
 
 # single user stats
-bot.add_command /^.seen\s+(\S+)$/, '.seen' do |bot, where, from, query|
+bot.add_command /^.seen\s+(\S+)$/, '.seen' do |query|
   result = user_stats[where].find { |name, _| name.downcase.include?(query.downcase) }
   if result
     name, stats = result
-    bot.say "Last seen at %s: <%s> %s" % [stats[:last_seen].strftime("%Y/%m/%d %H:%M"),
-                                          name,
-                                          stats[:last_msg]], where
+    say_chan "Last seen at %s: <%s> %s" % [stats[:last_seen].strftime("%Y/%m/%d %H:%M"),
+                                           name,
+                                           stats[:last_msg]]
   else
-    bot.say "Nope :(", where
+    say_chan "Nope :("
   end
 end
 
 # fetch the title of pasted URLs
 agent = Mechanize.new
 agent.user_agent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)"
-bot.add_command /(https?:\/\/\S+)/, 'HTTP URLs (will fetch title)' do |bot, where, from, url|
+bot.add_command /(https?:\/\/\S+)/, 'HTTP URLs (will fetch title)' do |url|
   page = agent.get(url)
   title = page.at('title').text.gsub(/\s+/, ' ').strip
-  bot.say "Title: %s" % title, where
+  say_chan "Title: %s" % title
 end
 
 # enable use of s/foo/bar syntax to correct mistakes
-bot.add_command /^s?\/([^\/]*)\/([^\/]*)\/?$/, 's/x/y/ substitution' do |bot, where, from, pattern, subst|
+bot.add_command /^s?\/([^\/]*)\/([^\/]*)\/?$/, 's/x/y/ substitution' do |pattern, subst|
   pattern = Regexp.new(pattern)
   result = history[where].reverse.drop(1).find { |_, f, m| f == from && m =~ pattern }
   if result
     time, from, msg = result
-    bot.say "<%s> %s" % [from, msg.gsub(pattern, subst)], where
+    say_chan "<%s> %s" % [from, msg.gsub(pattern, subst)]
   end
 end
 
@@ -103,5 +103,6 @@ Thread.new(bot) do |bot|
   bot.main_loop
 end
 
+sleep 100000000
 # start an interactive shell in the main thread :)
 binding.pry
