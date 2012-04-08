@@ -8,7 +8,7 @@ class IrcError < Exception ; end
 class IrcBot
   include Test::Unit::Assertions
 
-  @cmds = %w{ join mode nick notice ping pong privmsg quit user }
+  @cmds = %w{ join kick mode nick notice ping pong privmsg quit user }
 
   def initialize(nick)
     @nick = nick
