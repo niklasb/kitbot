@@ -72,6 +72,11 @@ bot.add_command /^.seen\s+(\S+)$/, '.seen' do |query|
   end
 end
 
+# show source
+bot.add_command /^.source/, '.source' do
+  say_chan 'My home: http://github.com/niklasb/kitbot'
+end
+
 # fetch the title of pasted URLs
 agent = Mechanize.new
 agent.user_agent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)"
