@@ -54,7 +54,7 @@ end
 # highscore by letter count
 bot.add_command /^.stats$/, '.stats' do
   users_count = user_stats[where].map { |user, stats| [user, stats[:letter_count]] }
-  top = users_count.sort_by { |user, count| -count }[0..$top_users]
+  top = users_count.sort_by { |user, count| -count }[0,$top_users]
   str = top.map { |x| "%s (%d)" % x }.join(", ")
   say_chan "Top users (letter count-wise): %s" % str
 end
