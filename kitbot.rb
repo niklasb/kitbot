@@ -103,6 +103,5 @@ Thread.new(bot) do |bot|
   bot.main_loop
 end
 
-sleep 100000000
 # start an interactive shell in the main thread :)
 binding.pry
