@@ -79,7 +79,7 @@ end
 
 # say bye :)
 bot.add_command /^\.bye/, '.bye' do
-  kick where, from
+  cmd_kick where, from
 end
 
 # fetch the title of pasted URLs
