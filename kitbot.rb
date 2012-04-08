@@ -52,7 +52,7 @@ end
 #========================
 
 # highscore by letter count
-bot.add_command /^.stats$/, '.stats' do
+bot.add_command /^\.stats$/, '.stats' do
   users_count = user_stats[where].map { |user, stats| [user, stats[:letter_count]] }
   top = users_count.sort_by { |user, count| -count }[0,$top_users]
   str = top.map { |x| "%s (%d)" % x }.join(", ")
@@ -60,7 +60,7 @@ bot.add_command /^.stats$/, '.stats' do
 end
 
 # single user stats
-bot.add_command /^.seen\s+(\S+)$/, '.seen' do |query|
+bot.add_command /^\.seen\s+(\S+)$/, '.seen' do |query|
   result = user_stats[where].find { |name, _| name.downcase.include?(query.downcase) }
   if result
     name, stats = result
@@ -73,7 +73,7 @@ bot.add_command /^.seen\s+(\S+)$/, '.seen' do |query|
 end
 
 # show source
-bot.add_command /^.source/, '.source' do
+bot.add_command /^\.source/, '.source' do
   say_chan 'My home: http://github.com/niklasb/kitbot'
 end
 
