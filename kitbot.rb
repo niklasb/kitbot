@@ -78,8 +78,12 @@ bot.add_command /^\.source/, '.source' do
 end
 
 # say bye :)
+farewells = ["Don't forget to close the door behind you.",
+             "One down, more to go.",
+             "Aww, what a pity.",
+            ]
 bot.add_command /^\.bye/, '.bye' do
-  cmd_kick where, from
+  cmd_kick where, from, farewells.sample
 end
 
 # fetch the title of pasted URLs
