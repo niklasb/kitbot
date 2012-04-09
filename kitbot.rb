@@ -73,7 +73,7 @@ bot.add_command /^\.seen\s+(\S+)$/, '.seen' do |query|
 end
 
 # show source
-bot.add_command /^\.source/, '.source' do
+bot.add_command /^\.source$/, '.source' do
   say_chan 'My home: http://github.com/niklasb/kitbot'
 end
 
@@ -82,7 +82,7 @@ farewells = ["Don't forget to close the door behind you.",
              "One down, more to go.",
              "Aww, what a pity.",
             ]
-bot.add_command /^\.bye/, '.bye' do
+bot.add_command /^\.bye$/, '.bye' do
   cmd_kick where, from, farewells.sample
 end
 
