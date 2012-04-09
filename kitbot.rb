@@ -64,7 +64,7 @@ bot.add_command /^\.seen\s+(\S+)$/, '.seen' do |query|
   result = user_stats[where].find { |name, _| name.downcase.include?(query.downcase) }
   if result
     name, stats = result
-    say_chan "Last seen at %s: <%s> %s" % [stats[:last_seen].strftime("%Y/%m/%d %H:%M"),
+    say_chan "Last seen at %s: <%s> %s" % [stats[:last_seen].strftime("%d.%m.%Y %H:%M"),
                                            name,
                                            stats[:last_msg]]
   else
