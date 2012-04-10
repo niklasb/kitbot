@@ -160,9 +160,9 @@ class IrcBot
     assert_connected
     loop do
       case get_line
-      when /^:([^!]+)[^:]*\s+PRIVMSG\s+:?(#?\S+)\s+:?(.*)/i
+      when /^:([^!]+)\S*\s+PRIVMSG\s+:?(#?\S+)\s+:?(.*)/i
         handle_msg(*$~.captures)
-      when /^:([^!]+)[^:]*\s+JOIN\s+:?#{@defchan}$/i
+      when /^:([^!]+)\S*\s+JOIN\s+:?#{@defchan}$/i
         handle_join(*$~.captures)
       end
     end
