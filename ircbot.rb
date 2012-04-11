@@ -67,7 +67,7 @@ class IrcBot
       puts "[ CTCP VERSION from #{$1}!#{$2}@#{$3} ]"
       cmd_notice $1, "\001VERSION botbot\001"
     when /^(:\S+\s+)?4\d\d\s+/
-      raise IrcError, "IRC error: %s" % line
+      $stderr.puts "[!!] IRC error: %s" % line
     else
       return nil
     end
