@@ -17,7 +17,7 @@ $top_users = 5
 $config_file = "config.yml"
 $nick = "Kitbot"
 $server = "irc.freenode.org"
-$channels = ["#niklasbottest"]
+$channels = ["#kitinfo"]
 
 config = load_yaml_hash($config_file)
 bot = IrcBot.new($nick)
