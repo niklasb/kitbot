@@ -14,7 +14,7 @@ class IrcBot
     @nick = nick
     @conn = nil
     commands = @commands = []
-    add_command /^.help$/, ".help" do
+    add_command /^\.help$/, ".help" do
       say_chan "I understand: %s" % commands.map { |_,h,_| h }
                                             .reject(&:nil?).join(', ')
     end
@@ -82,12 +82,12 @@ class IrcBot
   end
 
   def quote_cmd(args)
-    if args[0..-2].any? { |a| a =~ /\s/ }
+    last_arg = args.pop
+    if args.any? { |a| a =~ /\s/ }
       raise ValueError, "Only the last argument can contain whitespace"
     end
-    last_arg = args[-1]
-    last_arg = ":%s" % args[-1] if last_arg =~ /\s|:/
-    [*args[0..-2], last_arg].join(" ")
+    last_arg = ":%s" % last_arg if last_arg =~ /\s|:/
+    [*args, last_arg].join(" ")
   end
 
   @cmds.each do |cmd|
