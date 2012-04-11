@@ -162,8 +162,8 @@ class IrcBot
     call_simple_hooks(@join_hooks, :who => who, :where => where)
   end
 
-  def handle_leave(who, where)
-    call_simple_hooks(@leave_hooks, :who => who, :where => where)
+  def handle_leave(who, where, msg)
+    call_simple_hooks(@leave_hooks, :who => who, :where => where, :msg => msg)
   end
 
   def call_simple_hooks(hooks, vars)
@@ -177,8 +177,10 @@ class IrcBot
       case get_line
       when /^:([^!]+)\S*\s+PRIVMSG\s+:?(#?\S+)\s+:?(.*)/i
         handle_msg(*$~.captures)
-      when /^:([^!]+)\S*\s+JOIN\s+:?#{@defchan}$/i
+      when /^:([^!]+)\S*\s+JOIN\s+:?(#?\S+)\s+/i
         handle_join(*$~.captures)
+      when /^:([^!]+)\S*\s+PART\s+:?(#?\S+)\s+:?(.*)/i
+        handle_leave(*$~.captures)
       end
     end
   end
