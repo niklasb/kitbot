@@ -84,7 +84,7 @@ class IrcBot
   def quote_cmd(args)
     last_arg = args.pop
     if args.any? { |a| a =~ /\s/ }
-      raise ValueError, "Only the last argument can contain whitespace"
+      raise ArgumentError, "Only the last argument can contain whitespace"
     end
     last_arg = ":%s" % last_arg if last_arg =~ /\s|:/
     [*args, last_arg].join(" ")
