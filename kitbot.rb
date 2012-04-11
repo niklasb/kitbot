@@ -5,6 +5,7 @@ require 'open-uri'
 require 'mechanize'
 require 'yaml'
 require 'pry'
+require 'twitter'
 
 def load_yaml_hash(fname)
   File.open(fname, 'rb') { |f| YAML::load(f) }
@@ -84,6 +85,16 @@ farewells = ["Don't forget to close the door behind you.",
             ]
 bot.add_msg_hook /^\.bye$/, '.bye' do
   cmd_kick where, who, farewells.sample
+end
+
+# fetch Mensa menu
+bot.add_msg_hook /^\.mensa$/, '.mensa' do
+  items = Twitter.user_timeline("Mensa_KIT").take_while { |x| x.created_at > Date.today.to_time }
+  if items.empty?
+    say_chan "Not today."
+  else
+    say_chan items.map(&:text).reject { |text| text =~ /folgt jetzt/ }.join(', ')
+  end
 end
 
 # fetch the title of pasted URLs
