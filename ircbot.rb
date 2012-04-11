@@ -13,10 +13,14 @@ class IrcBot
   def initialize(nick)
     @nick = nick
     @conn = nil
-    commands = @commands = []
-    add_command /^\.help$/, ".help" do
-      say_chan "I understand: %s" % commands.map { |_,h,_| h }
-                                            .reject(&:nil?).join(', ')
+
+    @join_hooks = []
+    @leave_hooks = []
+    msg_hooks = @msg_hooks = []
+
+    add_msg_hook /^\.help$/, ".help" do
+      say_chan "I understand: %s" % msg_hooks.map { |_,h,_| h }
+                                             .reject(&:nil?).join(', ')
     end
   end
 
@@ -120,26 +124,30 @@ class IrcBot
     @irc.close
   end
 
-  def add_command(pattern, help = nil, &block)
-    raise ArgumentError, "no block given" unless block
-    @commands << [pattern, help, block]
+  def add_msg_hook(pattern, help = nil, &block)
+    @msg_hooks << [pattern, help, block]
   end
 
-  def handle_msg(from, where, msg)
+  def add_join_hook(&block)
+    @join_hooks << block
+  end
+
+  def add_leave_hook(&block)
+    @leave_hooks << block
+  end
+
+  def handle_msg(who, where, msg)
     # don't react to self
-    return if from == @nick
+    return if who == @nick
     # check for private conversation
     query = where == @nick
-    where = from if query
+    where = who if query
 
     # prepare execution context for the command blocks
-    stack = DynamicBinding::LookupStack.new
-    stack.push_instance(self)
-    stack.push_hash(:msg => msg, :where => where,
-                    :from => from, :query => query)
+    stack = get_context_stack(:msg => msg, :where => where, :who => who, :query => query)
     stack.push_method(:say_chan, lambda { |msg| say(msg, where) }, self)
 
-    @commands.each do |pattern, help, block|
+    @msg_hooks.each do |pattern, help, block|
       next unless msg =~ pattern
       begin
         stack.run_proc(block, *$~.captures)
@@ -148,12 +156,19 @@ class IrcBot
         $stderr.puts e.backtrace
       end
     end
-
-  rescue IrcError => err
-    puts err
   end
 
-  def handle_join(who)
+  def handle_join(who, where)
+    call_simple_hooks(@join_hooks, :who => who, :where => where)
+  end
+
+  def handle_leave(who, where)
+    call_simple_hooks(@leave_hooks, :who => who, :where => where)
+  end
+
+  def call_simple_hooks(hooks, vars)
+    stack = get_context_stack(vars)
+    hooks.each { |block| stack.run_proc(block) }
   end
 
   def main_loop
@@ -165,6 +180,15 @@ class IrcBot
       when /^:([^!]+)\S*\s+JOIN\s+:?#{@defchan}$/i
         handle_join(*$~.captures)
       end
+    end
+  end
+
+ protected
+
+  def get_context_stack(hash)
+    DynamicBinding::LookupStack.new.tap do |stack|
+      stack.push_instance(self)
+      stack.push_hash(hash)
     end
   end
 end

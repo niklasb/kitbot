@@ -17,7 +17,7 @@ $top_users = 5
 $config_file = "config.yml"
 $nick = "Kitbot"
 $server = "irc.freenode.org"
-$channels = ["#kitinfo"]
+$channels = ["#niklasbottest"]
 
 config = load_yaml_hash($config_file)
 bot = IrcBot.new($nick)
@@ -34,15 +34,15 @@ user_stats = Hash.new { |h,k| h[k] = Hash.new { |h,k| h[k] = { :letter_count => 
 end
 
 # log
-bot.add_command // do
+bot.add_msg_hook // do
   chanhist = history[where]
-  chanhist << [Time.now, from, msg]
+  chanhist << [Time.now, who, msg]
 
   # trim history to configured backlog size
   history[where] = chanhist[-$max_history..-1] if chanhist.size > $max_history
 
   # update user stats
-  stats = user_stats[where][from]
+  stats = user_stats[where][who]
   stats[:letter_count] += msg.size
   stats[:last_msg] = msg
   stats[:last_seen] = Time.now
@@ -52,7 +52,7 @@ end
 #========================
 
 # highscore by letter count
-bot.add_command /^\.stats$/, '.stats' do
+bot.add_msg_hook /^\.stats$/, '.stats' do
   users_count = user_stats[where].map { |user, stats| [user, stats[:letter_count]] }
   top = users_count.sort_by { |user, count| -count }[0,$top_users]
   str = top.map { |x| "%s (%d)" % x }.join(", ")
@@ -60,7 +60,7 @@ bot.add_command /^\.stats$/, '.stats' do
 end
 
 # single user stats
-bot.add_command /^\.seen\s+(\S+)$/, '.seen' do |query|
+bot.add_msg_hook /^\.seen\s+(\S+)$/, '.seen' do |query|
   result = user_stats[where].find { |name, _| name.downcase.include?(query.downcase) }
   if result
     name, stats = result
@@ -73,7 +73,7 @@ bot.add_command /^\.seen\s+(\S+)$/, '.seen' do |query|
 end
 
 # show source
-bot.add_command /^\.source$/, '.source' do
+bot.add_msg_hook /^\.source$/, '.source' do
   say_chan 'My home: http://github.com/niklasb/kitbot'
 end
 
@@ -82,26 +82,26 @@ farewells = ["Don't forget to close the door behind you.",
              "One down, more to go.",
              "Aww, what a pity.",
             ]
-bot.add_command /^\.bye$/, '.bye' do
-  cmd_kick where, from, farewells.sample
+bot.add_msg_hook /^\.bye$/, '.bye' do
+  cmd_kick where, who, farewells.sample
 end
 
 # fetch the title of pasted URLs
 agent = Mechanize.new
 agent.user_agent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)"
-bot.add_command /(https?:\/\/\S+)/, 'HTTP URLs (will fetch title)' do |url|
+bot.add_msg_hook /(https?:\/\/\S+)/, 'HTTP URLs (will fetch title)' do |url|
   page = agent.get(url)
   title = page.at('title').text.gsub(/\s+/, ' ').strip
   say_chan "Title: %s" % title
 end
 
 # enable use of s/foo/bar syntax to correct mistakes
-bot.add_command /^s?\/([^\/]*)\/([^\/]*)\/?$/, 's/x/y/ substitution' do |pattern, subst|
+bot.add_msg_hook /^s?\/([^\/]*)\/([^\/]*)\/?$/, 's/x/y/ substitution' do |pattern, subst|
   pattern = Regexp.new(pattern)
-  result = history[where].reverse.drop(1).find { |_, f, m| f == from && m =~ pattern }
+  result = history[where].reverse.drop(1).find { |_, w, m| w == who && m =~ pattern }
   if result
-    time, from, msg = result
-    say_chan "<%s> %s" % [from, msg.gsub(pattern, subst)]
+    time, who, msg = result
+    say_chan "<%s> %s" % [who, msg.gsub(pattern, subst)]
   end
 end
 
