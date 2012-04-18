@@ -104,7 +104,7 @@ end
 
 # seatping shortcut
 locations = { 'audimax' => 1, 'gerthsen' => 2 }
-seatping_url = 'http://dev.cbcdn.com/seatping/?last=90&ghall=%s'
+seatping_url = 'http://dev.cbcdn.com/seatping/?last=90&hall=%s'
 bot.add_msg_hook /^\.sp(\s.*)?/, '.sp' do |loc|
   loc &&= locations[loc.strip.downcase]
   if loc
