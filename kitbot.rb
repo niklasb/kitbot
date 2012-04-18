@@ -98,7 +98,19 @@ bot.add_msg_hook /^\.mensa$/, '.mensa' do
   if items.empty?
     say_chan "Not today."
   else
-    say_chan items.map(&:text).reject { |text| text =~ /folgt jetzt/ }.join(', ')
+    say_chan items.map(&:text).reject { |text| text =~ /folgt jetzt/ }.join('; ')
+  end
+end
+
+# seatping shortcut
+locations = { 'audimax' => 1, 'gerthsen' => 2 }
+seatping_url = 'http://dev.cbcdn.com/seatping/?last=90&ghall=%s'
+bot.add_msg_hook /^\.sp(\s.*)?/, '.sp' do |loc|
+  loc &&= locations[loc.strip.downcase]
+  if loc
+    say_chan seatping_url % loc
+  else
+    say_chan locations.map { |hall, id| '%s: %s' % [hall.capitalize, seatping_url % id] }.join(' ')
   end
 end
 
