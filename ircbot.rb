@@ -45,17 +45,12 @@ class IrcBot
 
   def get_line
     assert_connected
-    line = decode(@conn.readline)
 
-    line = line.strip
-    puts line
-
-    if handle_line(line)
-      # line was already handled
-      # (we want to respond to PING transparently)
-      get_line
-    else
-      line
+    loop do
+      line = decode(@conn.readline).strip
+      puts "< " + line
+      # handle PING transparently
+      return line unless handle_line(line)
     end
   end
 
@@ -87,7 +82,7 @@ class IrcBot
 
   def quote_cmd(args)
     last_arg = args.pop
-    if args.any? { |a| a =~ /\s/ }
+    if args.any? { |a| a =~ /\s:/ }
       raise ArgumentError, "Only the last argument can contain whitespace"
     end
     last_arg = ":%s" % last_arg if last_arg =~ /\s|:/
@@ -107,7 +102,7 @@ class IrcBot
 
   def connect(server, port=6667)
     @conn = TCPSocket.open(server, port)
-    cmd_user *["blah"]*4
+    cmd_user [@nick, "0", "*", @nick]
     cmd_nick @nick
     wait_for_line(/^(:\S+\s+)?376\s+/)
   end
