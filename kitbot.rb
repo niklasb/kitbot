@@ -87,6 +87,11 @@ bot.add_msg_hook /^\.bye$/, '.bye' do
   cmd_kick where, who, farewells.sample
 end
 
+answers = ['No.', 'Yes.', 'Bitch pls.']
+bot.add_msg_hook /^\.8ball\s/, '.8ball' do
+  say_chan 'The Magic 8 Ball says: %s' % answers.sample
+end
+
 # fetch Mensa menu
 bot.add_msg_hook /^\.mensa$/, '.mensa' do
   items = Twitter.user_timeline("Mensa_KIT").take_while { |x| x.created_at > Date.today.to_time }
