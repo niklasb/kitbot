@@ -44,9 +44,11 @@ bot.add_msg_hook // do
 
   # update user stats
   stats = user_stats[where][who]
-  stats[:letter_count] += msg.size
-  stats[:last_msg] = msg
-  stats[:last_seen] = Time.now
+  unless msg =~ /^\./
+    stats[:letter_count] += msg.size
+    stats[:last_msg] = msg
+    stats[:last_seen] = Time.now
+  end
 end
 
 # Commands
