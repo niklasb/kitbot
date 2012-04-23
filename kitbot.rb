@@ -5,10 +5,10 @@ require 'open-uri'
 require 'mechanize'
 require 'yaml'
 require 'pry'
-require 'feedwatch'
 
 $: << File.expand_path('..', __FILE__)
 
+require 'feedwatch'
 require 'ircbot'
 require 'mensa'
 
