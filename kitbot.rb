@@ -117,19 +117,26 @@ mensa_data = {}
 bot.add_msg_hook /^\.mensa(?:\s+(.*))?$/, '.mensa' do |args|
   args = args ? args.split : []
   day = Date.today
-  puts "args: " + args.inspect
-  day += args.shift[1..-1].to_i if args.size > 0 && args[0][0,1] == '+'
+
+  # a numeric argument at the beginning specifies a day shift
+  day += args.shift.to_i if args.size > 0 && args[0] =~ /^\d+$/
+
+  # update data if out of date
   mensa_data = Mensa::StudentenwerkScraper.new.data unless mensa_data[day]
 
-  queries = args.empty? ? ["l"] : args
-  say_chan "Menu for %s" % day.strftime($date_format)
-  mensa_data[day].each do |line, meals|
-    next unless queries.any? { |query| line =~ /^#{query}/i }
-    interesting_meals = meals.select { |_, price, _| price >= 100 }
-    say_chan "%s: %s" % [line, interesting_meals.map { |name, price, price_note|
-                               "%s (%s%.2f)" % [name,
-                                                price_note ? price_note + ' ' : '',
-                                                price/100.0] }.join(", ")]
+  if lines = mensa_data[day]
+    queries = args.empty? ? ["l"] : args
+    say_chan "Menu for %s" % day.strftime($date_format)
+    lines.each do |line, meals|
+      next unless queries.any? { |query| line =~ /^#{query}/i }
+      interesting_meals = meals.select { |_, price, _| price >= 100 }
+      say_chan "%s: %s" % [line, interesting_meals.map { |name, price, price_note|
+                                "%s (%s%.2f)" % [name,
+                                                  price_note ? price_note + ' ' : '',
+                                                  price/100.0] }.join(", ")]
+    end
+  else
+    say_chan "No data for today, sorry."
   end
 end
 
