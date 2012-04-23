@@ -6,6 +6,7 @@ require 'mechanize'
 require 'yaml'
 require 'pry'
 require 'twitter'
+require 'rsswatch'
 
 def load_yaml_hash(fname)
   File.open(fname, 'rb') { |f| YAML::load(f) }
@@ -19,6 +20,11 @@ $config_file = "config.yml"
 $nick = "Kitbot"
 $server = "irc.freenode.org"
 $channels = ["#kitinfo"]
+$rss = [
+  { :channels => $channels,
+    :url => 'http://dev.cbcdn.com/seatping/?rss',
+    :formatter => lambda { "Seatping alert! %s checked in: %s" % [author, link] } }
+]
 
 config = load_yaml_hash($config_file)
 bot = IrcBot.new($nick)
@@ -105,7 +111,7 @@ bot.add_msg_hook /^\.mensa$/, '.mensa' do
 end
 
 # seatping shortcut
-locations = { 'audimax' => 1, 'gerthsen' => 2 }
+locations = { 'audimax' => 1, 'gerthsen' => 2, 'hsaf' => 3 }
 seatping_url = 'http://dev.cbcdn.com/seatping/?last=90&hall=%s'
 bot.add_msg_hook /^\.sp(\s.*)?/, '.sp' do |loc|
   loc &&= locations[loc.strip.downcase]
@@ -145,6 +151,23 @@ Thread.new(bot) do |bot|
   bot.connect($server)
   $channels.each { |chan| bot.join(chan) }
   bot.main_loop
+end
+
+# start RSS watchers in background
+$rss.each do |config|
+  Thread.new do
+    begin
+      RssWatcher.new([config[:url]], config[:interval] || 60).run do |item|
+        msg = item.instance_exec(&config[:formatter])
+        config[:channels].each do |chan|
+          bot.say msg, chan
+        end
+      end
+    rescue Exception => e
+      $stderr.puts "Exception in RSS thread: %s" % e.inspect
+      $stderr.puts e.backtrace
+    end
+  end
 end
 
 # start an interactive shell in the main thread :)
