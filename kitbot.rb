@@ -136,7 +136,7 @@ bot.add_msg_hook /^\.mensa(?:\s+(.*))?$/, '.mensa' do |args|
                                                   price/100.0] }.join(", ")]
     end
   else
-    say_chan "No data for today, sorry."
+    say_chan "No data for %s, sorry." % day.strftime($date_format)
   end
 end
 
