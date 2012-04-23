@@ -146,7 +146,7 @@ class IrcBot
       next unless msg =~ pattern
       begin
         stack.run_proc(block, *$~.captures)
-      rescue => e
+      rescue Exception => e
         $stderr.puts "Error while executing command %s: %s" % [help, e.inspect]
         $stderr.puts e.backtrace
       end
