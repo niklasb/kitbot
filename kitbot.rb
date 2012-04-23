@@ -29,6 +29,8 @@ $feeds = [
     :url => 'http://www.heise.de/newsticker/heise-atom.xml',
     :formatter => lambda { 'Heise: %s -- %s' % [title, url] } },
 ]
+$date_format = "%d.%m.%Y"
+$time_format = $date_format + " %H:%M"
 
 config = load_yaml_hash($config_file)
 bot = IrcBot.new($nick)
@@ -77,7 +79,7 @@ bot.add_msg_hook /^\.seen\s+(\S+)$/, '.seen' do |query|
   result = user_stats[where].find { |name, _| name.downcase.include?(query.downcase) }
   if result
     name, stats = result
-    say_chan "Last seen at %s: <%s> %s" % [stats[:last_seen].strftime("%d.%m.%Y %H:%M"),
+    say_chan "Last seen at %s: <%s> %s" % [stats[:last_seen].strftime($time_format),
                                            name,
                                            stats[:last_msg]]
   else
@@ -120,6 +122,7 @@ bot.add_msg_hook /^\.mensa(?:\s+(.*))?$/, '.mensa' do |args|
   mensa_data = Mensa::StudentenwerkScraper.new.data unless mensa_data[day]
 
   queries = args.empty? ? ["l"] : args
+  say_chan "Menu for %s" % day.strftime($date_format)
   mensa_data[day].each do |line, meals|
     next unless queries.any? { |query| line =~ /^#{query}/i }
     interesting_meals = meals.select { |_, price, _| price >= 100 }
