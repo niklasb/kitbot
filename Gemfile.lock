@@ -1,3 +1,9 @@
+GIT
+  remote: git://github.com/niklasb/ruby-dynamic-binding.git
+  revision: 1e50895aa80546ad95593e673be94cca6d740529
+  specs:
+    dynamic_binding (0.1)
+
 GEM
   remote: http://rubygems.org/
   specs:
@@ -56,6 +62,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  dynamic_binding!
   feedzirra
   mechanize
   nokogiri
