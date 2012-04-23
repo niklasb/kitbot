@@ -1,10 +1,13 @@
-$: << File.expand_path('..', __FILE__)
+require 'rubygems'
+require 'bundler/setup'
 
 require 'open-uri'
 require 'mechanize'
 require 'yaml'
 require 'pry'
 require 'feedwatch'
+
+$: << File.expand_path('..', __FILE__)
 
 require 'ircbot'
 require 'mensa'
