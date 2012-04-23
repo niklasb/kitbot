@@ -25,9 +25,9 @@ $feeds = [
   { :channels => $channels,
     :url => 'http://dev.cbcdn.com/seatping/?rss',
     :formatter => lambda { 'Seatping alert! %s checked in: %s' % [author, url] } },
-  { :channels => $channels,
-    :url => 'http://www.heise.de/newsticker/heise-atom.xml',
-    :formatter => lambda { 'Heise: %s -- %s' % [title, url] } },
+#  { :channels => $channels,
+#    :url => 'http://www.heise.de/newsticker/heise-atom.xml',
+#    :formatter => lambda { 'Heise: %s -- %s' % [title, url] } },
 ]
 $date_format = "%d.%m.%Y"
 $time_format = $date_format + " %H:%M"
