@@ -6,7 +6,7 @@ require 'mechanize'
 require 'yaml'
 require 'pry'
 require 'twitter'
-require 'rsswatch'
+require 'feedwatch'
 
 def load_yaml_hash(fname)
   File.open(fname, 'rb') { |f| YAML::load(f) }
@@ -19,11 +19,14 @@ $top_users = 5
 $config_file = "config.yml"
 $nick = "Kitbot"
 $server = "irc.freenode.org"
-$channels = ["#kitinfo"]
-$rss = [
+$channels = ["#niklasbottest"]
+$feeds = [
   { :channels => $channels,
     :url => 'http://dev.cbcdn.com/seatping/?rss',
-    :formatter => lambda { "Seatping alert! %s checked in: %s" % [author, link] } }
+    :formatter => lambda { 'Seatping alert! %s checked in: %s' % [author, url] } },
+  { :channels => $channels,
+    :url => 'http://www.heise.de/newsticker/heise-atom.xml',
+    :formatter => lambda { 'Heise: %s -- %s' % [title, url] } },
 ]
 
 config = load_yaml_hash($config_file)
@@ -86,6 +89,12 @@ bot.add_msg_hook /^\.source$/, '.source' do
   say_chan 'My home: http://github.com/niklasb/kitbot'
 end
 
+# show feeds subscribed in this channel
+bot.add_msg_hook /^\.feeds/, '.feeds' do
+  say_chan "Feeds: " + $feeds.select { |f| f[:channels].include?(where) }
+                             .map { |f| f[:url] }.join(", ")
+end
+
 # say bye :)
 farewells = ["Don't forget to close the door behind you.",
              "One down, more to go.",
@@ -146,28 +155,28 @@ at_exit do
   open($config_file, 'wb') { |f| f.write({ :user_stats => user_stats }.to_yaml) }
 end
 
-# start bot in background
-Thread.new(bot) do |bot|
-  bot.connect($server)
-  $channels.each { |chan| bot.join(chan) }
-  bot.main_loop
-end
-
-# start RSS watchers in background
-$rss.each do |config|
+# start feed watchers in background
+$feeds.each do |config|
   Thread.new do
     begin
-      RssWatcher.new([config[:url]], config[:interval] || 60).run do |item|
-        msg = item.instance_exec(&config[:formatter])
+      FeedWatcher.new([config[:url]], config[:interval] || 60).run do |entry|
+        msg = entry.instance_exec(&config[:formatter])
         config[:channels].each do |chan|
           bot.say msg, chan
         end
       end
     rescue Exception => e
-      $stderr.puts "Exception in RSS thread: %s" % e.inspect
+      $stderr.puts "Exception in feed thread: %s" % e.inspect
       $stderr.puts e.backtrace
     end
   end
+end
+
+# start bot in background
+Thread.new do
+  bot.connect($server)
+  $channels.each { |chan| bot.join(chan) }
+  bot.main_loop
 end
 
 # start an interactive shell in the main thread :)
