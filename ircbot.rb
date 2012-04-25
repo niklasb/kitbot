@@ -10,9 +10,19 @@ class IrcBot
 
   @cmds = %w{ join kick mode nick notice ping pong privmsg quit user }
 
-  def initialize(nick)
+  def initialize(nick, config = {})
+    @config = {
+      delay: 0.1,
+      throttle_threshold_time: 2,
+      throttle_threshold_messages: 5,
+      throttle_factor: 10,
+      throttle_time: 10,
+    }.merge(config)
+
     @nick = nick
     @conn = nil
+    @send_times = []
+    @throttle_end = Time.now
 
     @join_hooks = []
     @leave_hooks = []
@@ -30,7 +40,7 @@ class IrcBot
 
   def send(msg)
     assert_connected
-    puts "--> %s" % msg
+    puts "> %s" % msg
     @conn.send msg + "\n", 0
   end
 
@@ -59,12 +69,6 @@ class IrcBot
     when /^PING :(.+)$/i
       puts "[ Server ping ]"
       cmd_pong $1
-    when /^:(.+?)!(.+?)@(.+?)\sPRIVMSG\s.+\s:[\001]PING (.+)[\001]$/i
-      puts "[ CTCP PING from #{$1}!#{$2}@#{$3} ]"
-      cmd_notice $1, "\001PING #{$4}\001"
-    when /^:(.+?)!(.+?)@(.+?)\sPRIVMSG\s.+\s:[\001]VERSION[\001]$/i
-      puts "[ CTCP VERSION from #{$1}!#{$2}@#{$3} ]"
-      cmd_notice $1, "\001VERSION botbot\001"
     when /^(:\S+\s+)?4\d\d\s+/
       $stderr.puts "[!!] IRC error: %s" % line
     else
@@ -95,9 +99,23 @@ class IrcBot
     end
   end
 
+  def delay
+    now = Time.now
+    @send_times = @send_times.drop_while { |t|
+      now - t > @config[:throttle_threshold_time]
+    }
+    if @send_times.size > @config[:throttle_threshold_messages]
+      @throttle_end = now + @config[:throttle_time]
+    end
+
+    @config[:delay] * (now < @throttle_end ? @config[:throttle_factor] : 1)
+  end
+
   def say(msg, target)
     raise ArgumentError, "No target given" if !target
+    sleep delay
     cmd_privmsg target, msg
+    @send_times << Time.now
   end
 
   def connect(server, port=6667)
