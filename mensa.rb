@@ -11,11 +11,11 @@ module Mensa
     end
 
     def data
-      today = Date.today
-      monday = today - today.wday + 1
-      date_range = monday ... (monday + 5)
+      tables = @doc.css("#platocontent > table")
+      captions = tables.map { |t| t.xpath("preceding::h1").last.text }
+      dates = captions.map { |c| Date.strptime(c.split.last, "%d.%m.") }
       menus = @doc.css("#platocontent > table").map { |t| parse_day_table(t) }
-      Hash[date_range.zip(menus)]
+      Hash[dates.zip(menus)]
     end
 
     def parse_day_table(table)
