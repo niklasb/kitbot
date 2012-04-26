@@ -76,7 +76,8 @@ end
 
 # single user stats
 bot.add_msg_hook /^\.seen\s+(\S+)$/, '.seen' do |query|
-  result = user_stats[where].find { |name, _| name.downcase.include?(query.downcase) }
+  rev = user_stats[where].sort_by { |_, stats| stats[:last_seen] }.reverse
+  result = rev.find { |name, _| name =~ /#{query}/i }
   if result
     name, stats = result
     say_chan "Last seen at %s: <%s> %s" % [stats[:last_seen].strftime($time_format),
