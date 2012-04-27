@@ -76,7 +76,8 @@ end
 
 # single user stats
 bot.add_msg_hook /^\.seen\s+(\S+)$/, '.seen' do |query|
-  rev = user_stats[where].sort_by { |_, stats| stats[:last_seen] }.reverse
+  rev = user_stats[where].select  { |_, stats| stats[:last_seen] }
+                         .sort_by { |_, stats| stats[:last_seen] }.reverse
   result = rev.find { |name, _| name =~ /#{query}/i }
   if result
     name, stats = result
