@@ -167,7 +167,7 @@ end
 # enable use of s/foo/bar syntax to correct mistakes
 bot.add_msg_hook /^s?\/([^\/]*)\/([^\/]*)\/?$/, 's/x/y/ substitution' do |pattern, subst|
   pattern = Regexp.new(pattern)
-  result = history[where].reverse.drop(1).find { |_, w, m| w == who && m =~ pattern }
+  result = history[where].reverse.drop(1).find { |_, _, m| m =~ pattern }
   if result
     time, who, msg = result
     say_chan "<%s> %s" % [who, msg.gsub(pattern, subst)]
