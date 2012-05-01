@@ -67,8 +67,8 @@ end
 #========================
 
 # highscore by letter count
-bot.add_msg_hook /^\.stats$/, '.stats' do
-  users_count = user_stats[where].map { |user, stats| [user, stats[:letter_count]] }
+bot.add_msg_hook /^\.stats(?:\s+(\S+))?$/, '.stats' do |chan|
+  users_count = user_stats[chan || where].map { |user, stats| [user, stats[:letter_count]] }
   top = users_count.sort_by { |user, count| -count }[0,$top_users]
   str = top.map { |x| "%s (%d)" % x }.join(", ")
   say_chan "Top users (letter count-wise): %s" % str
