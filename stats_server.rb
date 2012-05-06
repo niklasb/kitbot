@@ -37,7 +37,7 @@ get '/' do
     [grouped.select { [user, sum(characters).as('total')] },
      grouped.select { [user, sum(words).as('total')] }
     ].map { |result|
-      result.order(:total).reverse.all
+      result.having('total > 0').order(:total).reverse.all
     }
   }
   haml :index
