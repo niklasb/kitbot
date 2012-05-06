@@ -13,6 +13,10 @@ require 'feedwatch'
 require 'ircbot'
 require 'mensa'
 
+unless ARGV.size == 1
+  $stderr.puts "Usage: #{$0} config_file"
+  exit 1
+end
 $config = File.open(ARGV[0]) { |f| YAML::load(f) }
 bot = IrcBot.new($config['nick'])
 
