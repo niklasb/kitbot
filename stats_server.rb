@@ -29,7 +29,7 @@ def start_of_year
 end
 
 get '/' do
-  msgs = stats.filter(channel: params[:channel])
+  msgs = stats.filter(channel: params[:channel] || $config['channels'].first)
 
   @stats = [Date.today, start_of_week, start_of_month, nil].map { |start|
     filtered = start ? msgs.filter('date >= ?', start) : msgs
