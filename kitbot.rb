@@ -1,11 +1,11 @@
 require 'rubygems'
 require 'bundler/setup'
 
-require 'open-uri'
 require 'mechanize'
 require 'yaml'
 require 'pry'
 require 'sequel'
+require 'uri'
 
 $: << File.expand_path('..', __FILE__)
 
@@ -62,7 +62,8 @@ end
 
 # highscore link
 bot.add_msg_hook /^\.statslink$/, '.statslink' do
-  say_chan "#{$config['stats_url']} - %{channel} Stats" % {channel: where}
+  say_chan "#{$config['stats_url']} - %{channel} Stats" % {
+                                channel: URI::escape(where)}
 end
 
 # highscore by letter count
