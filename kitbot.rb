@@ -98,15 +98,6 @@ bot.add_msg_hook /^\.feeds/, '.feeds' do
                              .map { |f| f[:url] }.join(", ")
 end
 
-# say bye :)
-farewells = ["Don't forget to close the door behind you.",
-             "One down, more to go.",
-             "Aww, what a pity.",
-            ]
-bot.add_msg_hook /^\.bye$/, '.bye' do
-  cmd_kick where, who, farewells.sample
-end
-
 answers = ['No.', 'Yes.', 'Bitch pls.']
 bot.add_msg_hook /^\.8ball\s/, '.8ball' do
   say_chan 'The Magic 8 Ball says: %s' % answers.sample
