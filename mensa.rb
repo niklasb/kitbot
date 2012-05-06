@@ -4,6 +4,17 @@ require 'open-uri'
 module Mensa
   StudentenwerkUri = 'http://www.studentenwerk-karlsruhe.de/de/essen/?view=ok&STYLE=popup_plain&c=adenauerring&p=1'
 
+  class Menu
+    def update(day)
+      @data = StudentenwerkScraper.new.data unless @data && @data.include?(day)
+    end
+
+    def [](day)
+      update(day)
+      @data[day]
+    end
+  end
+
   class StudentenwerkScraper
     def initialize(html=nil)
       html ||= open(StudentenwerkUri) { |s| s.read }

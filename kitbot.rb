@@ -113,7 +113,7 @@ bot.add_msg_hook /^\.8ball\s/, '.8ball' do
 end
 
 # fetch Mensa menu
-mensa_data = {}
+menu = Mensa::Menu.new
 bot.add_msg_hook /^\.mensa(?:\s+(.*))?$/, '.mensa' do |args|
   args = args ? args.split : []
   day = Date.today
@@ -121,10 +121,7 @@ bot.add_msg_hook /^\.mensa(?:\s+(.*))?$/, '.mensa' do |args|
   # a numeric argument at the beginning specifies a day shift
   day += args.shift.to_i if args.size > 0 && args[0] =~ /^\d+$/
 
-  # update data if out of date
-  mensa_data = Mensa::StudentenwerkScraper.new.data unless mensa_data[day]
-
-  if lines = mensa_data[day]
+  if lines = menu[day]
     queries = args.empty? ? ["l"] : args
     say_chan "Menu for %s" % format_time(day)
     lines.each do |line, meals|
