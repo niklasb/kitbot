@@ -60,6 +60,11 @@ end
 # Commands
 #========================
 
+# highscore link
+bot.add_msg_hook /^\.statslink$/, '.statslink' do
+  say_chan "#{$config['stats_url']} - %{channel} Stats" % {channel: where}
+end
+
 # highscore by letter count
 bot.add_msg_hook /^\.stats(?:\s+(\S+))?$/, '.stats' do |chan|
   chan ||= where
@@ -89,7 +94,7 @@ end
 
 # show source
 bot.add_msg_hook /^\.source$/, '.source' do
-  say_chan 'My home: http://github.com/niklasb/kitbot'
+  say_chan 'My home: ' + $config['source_url']
 end
 
 # show feeds subscribed in this channel
