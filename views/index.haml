@@ -1,0 +1,29 @@
+!!!
+%html
+  %head
+    %title #kitinfo Stats
+    %link(rel="stylesheet" href="css/styles.css")
+  %body
+    %div#left
+      - ["Daily", "Weekly", "Monthly", "All time"].zip(@stats).each do |title, (by_chars, by_words)|
+        %h1= title
+        %table.left
+          %thead
+            %tr
+              %td User
+              %td Characters
+          %tbody
+            - by_chars.each do |entry|
+              %tr
+                %td= entry[:user]
+                %td= entry[:total]
+        %table.right
+          %thead
+            %tr
+              %td User
+              %td Words
+          %tbody
+            - by_words.each do |entry|
+              %tr
+                %td= entry[:user]
+                %td= entry[:total]
