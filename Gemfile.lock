@@ -52,7 +52,9 @@ GEM
       json (~> 1.4)
     sax-machine (0.1.0)
       nokogiri (> 0.0.0)
+    sequel (3.35.0)
     slop (2.4.4)
+    sqlite3 (1.3.5)
     unf (0.0.5)
       unf_ext
     unf_ext (0.0.4)
@@ -67,3 +69,5 @@ DEPENDENCIES
   mechanize
   nokogiri
   pry
+  sequel
+  sqlite3

@@ -5,6 +5,7 @@ require 'open-uri'
 require 'mechanize'
 require 'yaml'
 require 'pry'
+require 'sequel'
 
 $: << File.expand_path('..', __FILE__)
 
@@ -12,54 +13,43 @@ require 'feedwatch'
 require 'ircbot'
 require 'mensa'
 
-def load_yaml_hash(fname)
-  File.open(fname, 'rb') { |f| YAML::load(f) }
-rescue
-  {}
+$config = File.open(ARGV[0]) { |f| YAML::load(f) }
+bot = IrcBot.new($config['nick'])
+
+# set up DB
+db = Sequel.connect($config['database'])
+Sequel.extension :migration
+Sequel::Migrator.run(db, File.expand_path('../db/migrations', __FILE__))
+
+stats = db[:stats]
+messages = db[:messages]
+
+def format_time(datetime)
+  datetime.strftime(datetime.is_a?(Date) ? $config['date_format']
+                                         : $config['time_format'])
 end
 
-$max_history = 100
-$top_users = 5
-$config_file = "config.yml"
-$nick = "Kitbot"
-$server = "irc.freenode.org"
-$channels = ["#kitinfo"]
 $feeds = [
-  { :channels => $channels,
-    :url => 'http://dev.cbcdn.com/seatping/?rss',
-    :formatter => lambda { 'Seatping alert! %s checked in: %s' % [author, url] } },
+  { channels: $config['channels'],
+    url: 'http://dev.cbcdn.com/seatping/?rss',
+    formatter: lambda { 'Seatping alert! %s checked in: %s' % [author, url] } },
 ]
-$date_format = "%d.%m.%Y"
-$time_format = $date_format + " %H:%M"
-
-config = load_yaml_hash($config_file)
-bot = IrcBot.new($nick)
-
-# set up logging, as the substitution mechanism and stats depend on it :)
-history = Hash.new { |h,k| h[k] = [] }
-user_stats = Hash.new { |h,k| h[k] = Hash.new { |h,k| h[k] = { :letter_count => 0 }}}
-
-# merge data from file
-(config[:user_stats] || {}).each do |chan,users|
-  users.each do |user, stats|
-    user_stats[chan][user].merge! stats
-  end
-end
 
 # log
 bot.add_msg_hook // do
-  chanhist = history[where]
-  chanhist << [Time.now, who, msg]
-
-  # trim history to configured backlog size
-  history[where] = chanhist[-$max_history..-1] if chanhist.size > $max_history
+  messages.insert(channel: where, user: who, time: Time.now, message: msg)
 
   # update user stats
-  stats = user_stats[where][who]
   unless msg =~ /^\./
-    stats[:letter_count] += msg.size
-    stats[:last_msg] = msg
-    stats[:last_seen] = Time.now
+    words = msg.split.size
+    chars = msg.size
+
+    key = {channel: where, user: who, date: Date.today}
+    rec = stats.where(*key)
+    if 1 != rec.update(characters: :characters + chars,
+                       words: :words + words)
+      stats.insert(key.merge({ characters: chars, words: words }))
+    end
   end
 end
 
@@ -68,22 +58,26 @@ end
 
 # highscore by letter count
 bot.add_msg_hook /^\.stats(?:\s+(\S+))?$/, '.stats' do |chan|
-  users_count = user_stats[chan || where].map { |user, stats| [user, stats[:letter_count]] }
-  top = users_count.sort_by { |user, count| -count }[0,$top_users]
-  str = top.map { |x| "%s (%d)" % x }.join(", ")
+  chan ||= where
+  top = stats.filter(channel: chan)
+             .group(:user)
+             .select { [user, sum(characters).as("total")] }
+             .order(:total)
+             .last($config['top_users'])
+  str = top.map { |rec| "%s (%d)" % rec.values_at(:user, :total) }.join(", ")
   say_chan "Top users (letter count-wise): %s" % str
 end
 
 # single user stats
 bot.add_msg_hook /^\.seen\s+(\S+)$/, '.seen' do |query|
-  rev = user_stats[where].select  { |_, stats| stats[:last_seen] }
-                         .sort_by { |_, stats| stats[:last_seen] }.reverse
-  result = rev.find { |name, _| name =~ /#{query}/i }
+  result = messages.filter(:user.like("%#{query}%"),
+                           channel: where)
+                   .exclude(:message.like(".%"))
+                   .order(:time).last
   if result
-    name, stats = result
-    say_chan "Last seen at %s: <%s> %s" % [stats[:last_seen].strftime($time_format),
-                                           name,
-                                           stats[:last_msg]]
+    say_chan "Last seen at %s: <%s> %s" % [format_time(result[:time]),
+                                           result[:user],
+                                           result[:message]]
   else
     say_chan "Nope :("
   end
@@ -128,7 +122,7 @@ bot.add_msg_hook /^\.mensa(?:\s+(.*))?$/, '.mensa' do |args|
 
   if lines = mensa_data[day]
     queries = args.empty? ? ["l"] : args
-    say_chan "Menu for %s" % day.strftime($date_format)
+    say_chan "Menu for %s" % format_time(day)
     lines.each do |line, meals|
       next unless queries.any? { |query| line =~ /^#{query}/i }
       interesting_meals = meals.select { |_, price, _| price >= 100 }
@@ -139,7 +133,7 @@ bot.add_msg_hook /^\.mensa(?:\s+(.*))?$/, '.mensa' do |args|
                                                   price/100.0] }.join(", ")]
     end
   else
-    say_chan "No data for %s, sorry." % day.strftime($date_format)
+    say_chan "No data for %s, sorry." % format_time(day)
   end
 end
 
@@ -165,18 +159,17 @@ bot.add_msg_hook /(https?:\/\/\S+)/, 'HTTP URLs (will fetch title)' do |url|
 end
 
 # enable use of s/foo/bar syntax to correct mistakes
-bot.add_msg_hook /^s?\/([^\/]*)\/([^\/]*)\/?$/, 's/x/y/ substitution' do |pattern, subst|
+bot.add_msg_hook /^s\/([^\/]*)\/([^\/]*)\/?$/, 's/x/y/ substitution' do |pattern, subst|
   pattern = Regexp.new(pattern)
-  result = history[where].reverse.drop(1).find { |_, _, m| m =~ pattern }
+  result = messages.filter(channel: where)
+                   .exclude(:message.like("s/%"))
+                   .order(:time)
+                   .last(20)
+                   .find { |rec| rec[:message] =~ pattern }
   if result
-    time, who, msg = result
-    say_chan "<%s> %s" % [who, msg.gsub(pattern, subst)]
+    say_chan "<%s> %s" % [result[:user],
+                          result[:message].gsub(pattern, subst)]
   end
-end
-
-# don't forget to write stats back to config
-at_exit do
-  open($config_file, 'wb') { |f| f.write({ :user_stats => user_stats }.to_yaml) }
 end
 
 # start feed watchers in background
@@ -198,8 +191,8 @@ end
 
 # start bot in background
 Thread.new do
-  bot.connect($server)
-  $channels.each { |chan| bot.join(chan) }
+  bot.connect($config['server'])
+  $config['channels'].each { |chan| bot.join(chan) }
   bot.main_loop
 end
 

@@ -1,0 +1,8 @@
+top_users: 5
+nick: Kitbot
+server: irc.freenode.org
+channels:
+- '#kitinfo'
+date_format: '%d.%m.%Y'
+time_format: '%d.%m.%Y %H:%M'
+database: sqlite://db/kitbot.sqlite3
