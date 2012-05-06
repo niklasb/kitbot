@@ -1,6 +1,8 @@
 require 'feedzirra'
 require 'set'
 
+class FeedError < Exception; end
+
 class FeedWatcher
   def initialize(urls, interval = 60, yield_initial = false)
     @urls       = urls
@@ -11,7 +13,9 @@ class FeedWatcher
   end
 
   def parse_feed(url)
-    Feedzirra::Feed.fetch_and_parse(url)
+    Feedzirra::Feed.fetch_and_parse(url).tap do |res|
+      raise FeedError, "Invalid response" if res.is_a?(Fixnum)
+    end
   end
 
   def entries(&block)
@@ -21,8 +25,11 @@ class FeedWatcher
 
   def run
     loop do
-      entries do |entry|
-        yield entry if @seen_ids.add?(entry.id)
+      begin
+        entries do |entry|
+          yield entry if @seen_ids.add?(entry.id)
+        end
+      rescue FeedError
       end
       sleep(@interval)
     end
