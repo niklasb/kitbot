@@ -62,8 +62,7 @@ end
 
 # highscore link
 bot.add_msg_hook /^\.statslink$/, '.statslink' do
-  say_chan "#{$config['stats_url']} - %{channel} Stats" % {
-                                channel: URI::escape(where)}
+  say_chan "#{$config['stats_url'] % URI::escape(where)} - #{where} Stats"
 end
 
 # highscore by letter count
