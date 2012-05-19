@@ -65,6 +65,11 @@ bot.add_msg_hook /^\.statslink$/, '.statslink' do
   say_chan "#{$config['stats_url'] % URI::escape(where)} - #{where} Stats"
 end
 
+# pastie link
+bot.add_msg_hook /^\.paste$/, '.paste' do
+  say_chan "Paste it at https://gist.github.com/ or http://pastie.org/"
+end
+
 # highscore by letter count
 bot.add_msg_hook /^\.stats(?:\s+(\S+))?$/, '.stats' do |chan|
   chan ||= where
