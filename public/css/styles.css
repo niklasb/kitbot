@@ -9,10 +9,10 @@ thead {
   font-weight: bold;
 }
 
-.left, .right {
+.col1, .col2, .col3 {
   float: left;
 }
 
-.left {
+.col1, .col2 {
   margin-right: 100px;
 }

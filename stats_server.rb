@@ -35,7 +35,8 @@ get '/' do
     filtered = start ? msgs.filter('date >= ?', start) : msgs
     grouped = filtered.group(:user)
     [grouped.select { [user, sum(characters).as('total')] },
-     grouped.select { [user, sum(words).as('total')] }
+     grouped.select { [user, sum(words).as('total')] },
+     grouped.select { [user, (sum(characters)/sum(words)).as('total')] },
     ].map { |result|
       result.having('total > 0').order(:total).reverse.all
     }

@@ -5,9 +5,9 @@
     %link(rel="stylesheet" href="css/styles.css")
   %body
     %div#left
-      - ["Daily", "Weekly", "Monthly", "All time"].zip(@stats).each do |title, (by_chars, by_words)|
+      - ["Daily", "Weekly", "Monthly", "All time"].zip(@stats).each do |title, (by_chars, by_words, by_ratio)|
         %h1= title
-        %table.left
+        %table.col1
           %thead
             %tr
               %td User
@@ -17,13 +17,23 @@
               %tr
                 %td= entry[:user]
                 %td= entry[:total]
-        %table.right
+        %table.col2
           %thead
             %tr
               %td User
               %td Words
           %tbody
             - by_words.each do |entry|
+              %tr
+                %td= entry[:user]
+                %td= entry[:total]
+        %table.col3
+          %thead
+            %tr
+              %td User
+              %td Chars/word ratio
+          %tbody
+            - by_ratio.each do |entry|
               %tr
                 %td= entry[:user]
                 %td= entry[:total]
