@@ -36,4 +36,4 @@
             - by_ratio.each do |entry|
               %tr
                 %td= entry[:user]
-                %td= entry[:total]
+                %td= "%.3g" % entry[:total]
