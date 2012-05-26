@@ -32,8 +32,8 @@ get '/' do
   haml :index
 end
 
-get '/stats' do
-  msgs = stats.filter(channel: params[:channel] || $config['channels'].first)
+get '/stats/:channel' do |c|
+  msgs = stats.filter(channel: '#' + c)
 
   @stats = [Date.today, start_of_week, start_of_month, nil].map { |start|
     filtered = start ? msgs.filter('date >= ?', start) : msgs

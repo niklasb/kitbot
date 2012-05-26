@@ -62,7 +62,11 @@ end
 
 # highscore link
 bot.add_msg_hook /^\.statslink$/, '.statslink' do
-  say_chan "#{$config['stats_url'] % URI::escape(where)} - #{where} Stats"
+  if query
+    say_chan 'No links to stats in private channel'
+  else
+    say_chan "#{$config['stats_url'] % URI::escape(where[1..-1])} - #{where} Stats"
+  end
 end
 
 # pastie link
