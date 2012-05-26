@@ -27,7 +27,7 @@ module IrcBot::Commands
     @conn.close
   end
 
-  def who(channel)
+  def list_users(channel)
     assert_connected
     synchronize do
       users = []
