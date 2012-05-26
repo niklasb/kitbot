@@ -18,7 +18,7 @@ unless ARGV.size == 1
   exit 1
 end
 $config = File.open(ARGV[0]) { |f| YAML::load(f) }
-bot = IrcBot.new($config['nick'])
+bot = IrcBot::Bot.new($config['nick'])
 
 # set up DB
 db = Sequel.connect($config['database'])
@@ -197,11 +197,8 @@ $feeds.each do |config|
 end
 
 # start bot in background
-Thread.new do
-  bot.connect($config['server'])
-  $config['channels'].each { |chan| bot.join(chan) }
-  bot.main_loop
-end
+bot.start($config['server'])
+$config['channels'].each { |chan| bot.join(chan) }
 
 # start an interactive shell in the main thread :)
 binding.pry
