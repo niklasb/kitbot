@@ -83,7 +83,8 @@ bot.add_msg_hook /^\.stats(?:\s+(\S+))?$/, '.stats' do |chan|
 end
 
 # single user stats
-bot.add_msg_hook /^\.seen\s+(\S+)$/, '.seen' do |query|
+bot.add_msg_hook /^\.seen(?:\s+(\S+))?$/, '.seen' do |query|
+  query ||= ''
   result = messages.filter(:user.like("%#{query}%"),
                            channel: where)
                    .exclude(:message.like(".%"))
