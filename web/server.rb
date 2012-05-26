@@ -28,10 +28,6 @@ def start_of_year
   Date.new(Date.today.year)
 end
 
-get '/' do
-  haml :index
-end
-
 get '/stats/:channel' do |c|
   msgs = stats.filter(channel: '#' + c)
 
