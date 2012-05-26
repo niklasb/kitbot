@@ -2,7 +2,7 @@
 %html
   %head
     %title #kitinfo Stats
-    %link(rel="stylesheet" href="css/styles.css")
+    %link(rel="stylesheet" href="../css/styles.css")
   %body
     %div#left
       - ["Daily", "Weekly", "Monthly", "All time"].zip(@stats).each do |title, (by_chars, by_words, by_ratio)|
