@@ -29,6 +29,10 @@ def start_of_year
 end
 
 get '/' do
+  haml :index
+end
+
+get '/stats' do
   msgs = stats.filter(channel: params[:channel] || $config['channels'].first)
 
   @stats = [Date.today, start_of_week, start_of_month, nil].map { |start|
@@ -41,5 +45,5 @@ get '/' do
       result.having('total > 0').order(:total).reverse.all
     }
   }
-  haml :index
+  haml :stats
 end
