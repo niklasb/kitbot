@@ -7,7 +7,7 @@ require 'pry'
 require 'sequel'
 require 'uri'
 
-$: << File.expand_path('../lib', __LE__)
+$: << File.expand_path('../lib', __FILE__)
 
 require 'feedwatch'
 require 'ircbot'
