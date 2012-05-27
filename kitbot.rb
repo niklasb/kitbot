@@ -6,11 +6,13 @@ require 'yaml'
 require 'pry'
 require 'sequel'
 require 'uri'
+require 'thin'
 
 $: << File.expand_path('../lib', __FILE__)
 
 require 'feedwatch'
 require 'ircbot'
+require 'ircbot/api'
 require 'mensa'
 
 unless ARGV.size == 1
@@ -179,6 +181,9 @@ bot.add_msg_hook /^s\/([^\/]*)\/([^\/]*)\/?$/, 's/x/y/ substitution' do |pattern
   end
 end
 
+# add webhooks
+IrcBot::Webhooks.new(bot, db).register
+
 # start feed watchers in background
 $feeds.each do |config|
   Thread.new do
@@ -199,6 +204,12 @@ end
 # start bot in background
 bot.start($config['server'])
 $config['channels'].each { |chan| bot.join(chan) }
+
+# start API server in background
+Thread.new do
+  Thin::Server.start($config['api_host'], $config['api_port'],
+                     IrcBot::WebRPC.new(bot, db))
+end
 
 # start an interactive shell in the main thread :)
 binding.pry
