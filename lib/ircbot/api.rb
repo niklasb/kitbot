@@ -55,7 +55,7 @@ class WebRPC < Sinatra::Base
     @webhooks = db[:webhooks]
 
     init_auth "Web API" do |user, password|
-      hash = Digest::SHA1.digest(password)
+      hash = Digest::SHA1.hexdigest(password)
       @api_users.where(user: user, password: hash).first
     end
   end
