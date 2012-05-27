@@ -77,7 +77,7 @@ class WebRPC < Sinatra::Base
     end
 
     get '/hooks/message' do
-      json @webhooks.where(user: user)
+      json @webhooks.where(user: user, channel: @channel)
     end
 
     post '/hooks/message' do
