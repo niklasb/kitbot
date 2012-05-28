@@ -96,7 +96,7 @@ class WebRPC < Sinatra::Base
 
     post '/hooks/message' do
       id = @webhooks.insert(url: params[:url], channel: @channel,
-                            hook: 'message', argument: params[:pattern],
+                            hook: 'message', argument: params[:pattern] || '',
                             user: user)
       json id
     end
