@@ -37,6 +37,14 @@ module IrcBot
       loop { handle_line(get_line) }
     end
 
+    def readline
+      @conn.readline
+    end
+
+    def write(data)
+      @conn.send(data, 0)
+    end
+
     def synchronize(&block)
       (@mutex ||= Monitor.new).synchronize(&block)
     end
