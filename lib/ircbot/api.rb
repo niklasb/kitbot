@@ -53,6 +53,7 @@ class WebRPC < Sinatra::Base
     @bot = bot
     @api_users = db[:api_users]
     @webhooks = db[:webhooks]
+    @messages = db[:messages]
 
     init_auth "Web API" do |user, password|
       hash = Digest::SHA1.hexdigest(password)
@@ -67,7 +68,19 @@ class WebRPC < Sinatra::Base
     end
 
     get '/users' do
-      json @bot.list_users(@channel)
+      json @bot.get_users(@channel)
+    end
+
+    get '/usercount' do
+      json @bot.get_users(@channel).size
+    end
+
+    get '/topic' do
+      json @bot.get_topic(@channel)
+    end
+
+    get '/messages/last' do
+      json @messages.where(channel: @channel).order(:time).last
     end
 
     post '/messages' do
