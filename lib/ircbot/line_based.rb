@@ -25,25 +25,28 @@ module IrcBot::LineBasedProtocol
   end
 
   def wait_for_line(pattern)
+    captures = nil
     SyncUtils.await do |ev|
-      h = push_handler(pattern) { |*args|
+      h = push_handler(pattern) { |*c|
+        captures = c
         h.remove
         ev.signal
       }
       yield if block_given?
     end
+    captures
   end
 
   def get_line
-    line = decode(@conn.readline).strip
+    line = decode(readline).strip
     puts '< ' + line
     line
   end
 
-  def send(msg)
+  def send_line(msg)
     assert_connected
     puts '> ' + msg
-    @conn.send msg + "\r\n", 0
+    write msg + "\r\n"
   end
 
   def decode(str)

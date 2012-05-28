@@ -27,7 +27,7 @@ module IrcBot::Commands
     @conn.close
   end
 
-  def list_users(channel)
+  def get_users(channel)
     assert_connected
     synchronize do
       users = []
@@ -46,9 +46,21 @@ module IrcBot::Commands
     end
   end
 
+  def get_topic(channel)
+    status, topic = wait_for_line(/^:\S+ (4\d\d|332|331) \S+ \S+ :?(.*)/) {
+      cmd_topic channel
+    }
+
+    case status
+    when '332' then topic
+    when '331' then ''
+    else nil
+    end
+  end
+
   def method_missing(m, *args)
     if m =~ /^cmd_([a-z]+)$/
-      return send(quote_cmd([$1.upcase, *args]))
+      return send_line(quote_cmd([$1.upcase, *args]))
     end
     raise NoMethodError, 'No such method: %s' % m
   end
