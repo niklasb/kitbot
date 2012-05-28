@@ -67,7 +67,6 @@ class WebRPC < Sinatra::Base
     end
 
     get '/users' do
-      puts "Channel: " + @channel
       json @bot.list_users(@channel)
     end
 
@@ -77,7 +76,9 @@ class WebRPC < Sinatra::Base
     end
 
     get '/hooks/message' do
-      json @webhooks.where(user: user, channel: @channel)
+      json @webhooks.where(user: user, channel: @channel).map { |hook|
+        { id: hook[:id], url: hook[:url], pattern: hook[:argument] }
+      }
     end
 
     post '/hooks/message' do
