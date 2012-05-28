@@ -129,20 +129,29 @@ bot.add_msg_hook /^\.mensa(?:\s+(.*))?$/, '.mensa' do |args|
   # a numeric argument at the beginning specifies a day shift
   day += args.shift.to_i if args.size > 0 && args[0] =~ /^\d+$/
 
-  if lines = menu[day]
-    queries = args.empty? ? ["l"] : args
-    say_chan "Menu for %s" % format_time(day)
-    lines.each do |line, meals|
-      next unless queries.any? { |query| line =~ /^#{query}/i }
-      interesting_meals = meals.select { |_, price, _| price >= 100 }
-      next if interesting_meals.empty?
-      say_chan "%s: %s" % [line, interesting_meals.map { |name, price, price_note|
-                                "%s (%s%.2f)" % [name,
-                                                  price_note ? price_note + ' ' : '',
-                                                  price/100.0] }.join(", ")]
-    end
-  else
+  begin
+    lines = menu[day]
+  rescue => e
+    $stderr.puts 'Error while fetching mensa data: %s' % [url, e.inspect]
+    $stderr.puts e.backtrace
+    next
+  end
+
+  if !lines
     say_chan "No data for %s, sorry." % format_time(day)
+    next
+  end
+
+  queries = args.empty? ? ["l"] : args
+  say_chan "Menu for %s" % format_time(day)
+  lines.each do |line, meals|
+    next unless queries.any? { |query| line =~ /^#{query}/i }
+    interesting_meals = meals.select { |_, price, _| price >= 100 }
+    next if interesting_meals.empty?
+    say_chan "%s: %s" % [line, interesting_meals.map { |name, price, price_note|
+                              "%s (%s%.2f)" % [name,
+                                                price_note ? price_note + ' ' : '',
+                                                price/100.0] }.join(", ")]
   end
 end
 
@@ -162,8 +171,15 @@ end
 agent = Mechanize.new
 agent.user_agent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)"
 bot.add_msg_hook /(https?:\/\/\S+)/, 'HTTP URLs (will fetch title)' do |url|
-  page = agent.get(url)
-  title = page.at('title').text.gsub(/\s+/, ' ').strip
+  begin
+    page = agent.get(url)
+    title = page.at('title').text.gsub(/\s+/, ' ').strip
+  rescue => e
+    $stderr.puts 'Error while fetching title of %s: %s' % [url, e.inspect]
+    $stderr.puts e.backtrace
+    next
+  end
+
   say_chan "Title: %s" % title
 end
 
@@ -175,11 +191,13 @@ bot.add_msg_hook /^s\/([^\/]*)\/([^\/]*)\/?$/, 's/x/y/ substitution' do |pattern
                    .order(:time)
                    .last(20)
                    .find { |rec| rec[:message] =~ pattern }
-  if result
-    say_chan "<%s> %s" % [result[:user],
-                          result[:message].gsub(pattern, subst)]
-  end
+  next unless result
+
+  say_chan "<%s> %s" % [result[:user],
+                        result[:message].gsub(pattern, subst)]
 end
+
+Thread.abort_on_exception = true
 
 # add webhooks
 IrcBot::Webhooks.new(bot, db).register

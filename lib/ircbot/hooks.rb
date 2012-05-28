@@ -1,4 +1,5 @@
 require 'dynamic_binding'
+require 'eventmachine'
 
 module IrcBot::Hooks
   def add_msg_hook(pattern, help = nil, &block)
@@ -37,12 +38,8 @@ module IrcBot::Hooks
 
     @msg_hooks.each do |pattern, help, block|
       next unless msg =~ pattern
-      begin
-        stack.run_proc(block, *$~.captures)
-      rescue Exception => e
-        $stderr.puts 'Error while executing command %s: %s' % [help, e.inspect]
-        $stderr.puts e.backtrace
-      end
+      c = $~.captures
+      EventMachine.defer { stack.run_proc(block, *c) }
     end
   end
 
