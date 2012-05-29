@@ -6,7 +6,7 @@ channels:
 date_format: '%d.%m.%Y'
 time_format: '%d.%m.%Y %H:%M'
 stats_url: http://bot.kitinfo.de/stats/%s
-source_url: https://github.com/niklasb
+source_url: https://github.com/niklasb/kitbot
 api_host: 0.0.0.0
 api_port: 1337
 database: sqlite://db/kitbot.sqlite3
