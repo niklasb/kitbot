@@ -92,7 +92,7 @@ The `POST` request triggered if a message is sent will look something like
 
      POST http://my/callback.php
 
-     message=[the message]&channel=kitinfo
+     user=[the user who sent the message]&message=[the message]&channel=kitinfo
 
 ---
 

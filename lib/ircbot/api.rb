@@ -29,7 +29,8 @@ class Webhooks
         EventMachine.defer do
           begin
             Net::HTTP.post_form(URI.parse(hook[:url]), 'message' => msg,
-                                                       'channel' => where)
+                                                       'channel' => where,
+                                                       'user' => who)
             rec.update(fails: 0)
           rescue
             if hook[:fails] > MAX_FAILS
