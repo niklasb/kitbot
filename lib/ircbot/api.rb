@@ -71,7 +71,7 @@ class WebRPC < Sinatra::Base
       json @bot.get_users(@channel)
     end
 
-    get '/usercount' do
+    get '/users/count' do
       json @bot.get_users(@channel).size
     end
 
@@ -85,7 +85,6 @@ class WebRPC < Sinatra::Base
 
     post '/messages' do
       @bot.say params[:text], @channel
-      json true
     end
 
     get '/hooks/message' do
@@ -112,7 +111,7 @@ class WebRPC < Sinatra::Base
 
   def json(obj)
     content_type :json
-    obj.to_json
+    obj.to_json + "\n"
   end
 end
 
