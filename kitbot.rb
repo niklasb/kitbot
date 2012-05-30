@@ -212,7 +212,7 @@ $feeds.each do |config|
           bot.say msg, chan
         end
       end
-    rescue Exception => e
+    rescue => e
       $stderr.puts "Exception in feed thread: %s" % e.inspect
       $stderr.puts e.backtrace
     end

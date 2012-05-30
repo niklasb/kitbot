@@ -55,24 +55,25 @@ class Webhooks
  protected
 
   def call_webhook(hook, args)
-    rec = @hooks.where(id: hook[:id])
     EventMachine.defer do
+      rec = @hooks.where(id: hook[:id])
       begin
         Net::HTTP.post_form(URI.parse(hook[:url]), args.merge(hook: hook[:hook]))
-        rec.update(fails: 0)
       rescue
         if hook[:fails] > MAX_FAILS
           rec.delete
         else
           rec.update(:fails => :fails + 1)
         end
+      else
+        rec.update(fails: 0)
       end
     end
   end
 
   def get_matching_hooks(type, channel, query)
     # no hooks for private channels
-    return if query
+    return [] if query
     @hooks.where(hook: type).all.select { |hook| hook[:channel] == channel }
   end
 end
