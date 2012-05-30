@@ -2,6 +2,8 @@ module IrcBot
   class IrcError < Exception; end
 
   module BasicClient
+    attr_reader :nick
+
    protected
 
     def init_client(nick)

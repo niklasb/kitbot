@@ -63,6 +63,7 @@ You can register a webhook (HTTP callback) for certain events in a channel:
   first time
 * `part`: Triggered if a user leaves the channel
 * `topic`: Triggered if the topic is changed
+* `quit`: Triggered if a user leaves the server
 
 All of the following commands require an `url` argument: The URL to `POST` to if the
 event occurs. Some also take other arguments, as described below.
@@ -92,7 +93,8 @@ The `POST` request triggered if a message is sent will look something like
 
      POST http://my/callback.php
 
-     user=[the user who sent the message]&message=[the message]&channel=kitinfo
+     user=[the user who sent the message]&message=[the message]
+     &channel=#kitinfo&hook=message
 
 ---
 
@@ -107,7 +109,7 @@ The `POST` request triggered if a message is sent will look something like
 
      POST http://my/callback.php
 
-     user=[the joined user]&bot=0&channel=kitinfo
+     user=[the joined user]&bot=0&channel=#kitinfo&hook=join
 
 where the value of the `bot` argument (`0` or `1`) determines if the joined user is
 the bot itself.
@@ -125,7 +127,7 @@ The `POST` request triggered if a message is sent will look something like
 
      POST http://my/callback.php
 
-     user=[the leaving user]&quit=[the leave message]&channel=kitinfo
+     user=[the leaving user]&message=[the leave message]&channel=#kitinfo&hook=part
 
 ---
 
@@ -140,27 +142,42 @@ The `POST` request triggered if a message is sent will look something like
 
      POST http://my/callback.php
 
-     topic=[the new topic]&channel=kitinfo
+     topic=[the new topic]&user=[user who changed it]&channel=#kitinfo&hook=topic
+
+---
+
+    POST /hooks/quit
+
+Add a hook that is triggered if a user leaves the server:
+
+    curl --user user:pass -d url=http://my/callback.php \
+              http://bot.kitinfo.de:1337/hooks/quit
+
+The `POST` request triggered if a message is sent will look something like
+
+     POST http://my/callback.php
+
+     user=[user who left]&message=[quit message]&hook=quit
 
 #### Managing hooks
 
 ---
 
-    GET /channel/:channel/hooks/:hooktype
+    GET /hooks
 
-Gets a list of all registered hooks for the given type:
+Gets a list of all registered hooks:
 
-    $ curl --user user:pass http://bot.kitinfo.de:1337/channel/kitinfo/hooks/message
-    [{"id":2,"url":"http://my/callback.php","pattern":""},
-     {"id":3,"url":"http://my/callback2.php","pattern":"test"}]
+    $ curl --user user:pass http://bot.kitinfo.de:1337/hooks
+    [{"id":2,"channel":"#kitinfo","type":"message","url":"http://my/callback.php",
+      "pattern":""},
+     {"id":3,"channel":"#kitinfo","type":"join","url":"http://my/callback.php"}]
 
 ---
 
-    DELETE /channel/:channel/hooks/:hooktype/:id
+    DELETE /hooks/:id
 
-Deletes the hook with the given type and ID. Returns `true` on success and
+Deletes the hook with the given ID. Returns `true` on success and
 `false` on failure:
 
-    $ curl -X DELETE --user user:pass \
-            http://bot.kitinfo.de:1337/channel/kitinfo/hooks/message/2
+    $ curl -X DELETE --user user:pass http://bot.kitinfo.de:1337/hooks/2
     true

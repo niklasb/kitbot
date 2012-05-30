@@ -42,7 +42,7 @@ $feeds = [
 ]
 
 # log
-bot.add_msg_hook // do
+bot.add_fancy_msg_hook // do
   messages.insert(channel: where, user: who, time: Time.now, message: msg)
 
   # update user stats
@@ -63,7 +63,7 @@ end
 #========================
 
 # highscore link
-bot.add_msg_hook /^\.statslink$/, '.statslink' do
+bot.add_fancy_msg_hook /^\.statslink$/, '.statslink' do
   if query
     say_chan 'No links to stats in private channel'
   else
@@ -72,12 +72,12 @@ bot.add_msg_hook /^\.statslink$/, '.statslink' do
 end
 
 # pastie link
-bot.add_msg_hook /^\.paste$/, '.paste' do
+bot.add_fancy_msg_hook /^\.paste$/, '.paste' do
   say_chan "Paste it at https://gist.github.com/ or http://pastie.org/"
 end
 
 # highscore by letter count
-bot.add_msg_hook /^\.stats(?:\s+(\S+))?$/, '.stats' do |chan|
+bot.add_fancy_msg_hook /^\.stats(?:\s+(\S+))?$/, '.stats' do |chan|
   chan ||= where
   top = stats.filter(channel: chan)
              .group(:user)
@@ -89,7 +89,7 @@ bot.add_msg_hook /^\.stats(?:\s+(\S+))?$/, '.stats' do |chan|
 end
 
 # single user stats
-bot.add_msg_hook /^\.seen(?:\s+(\S+))?$/, '.seen' do |query|
+bot.add_fancy_msg_hook /^\.seen(?:\s+(\S+))?$/, '.seen' do |query|
   query ||= ''
   result = messages.filter(:user.like("%#{query}%"),
                            channel: where)
@@ -105,24 +105,24 @@ bot.add_msg_hook /^\.seen(?:\s+(\S+))?$/, '.seen' do |query|
 end
 
 # show source
-bot.add_msg_hook /^\.source$/, '.source' do
+bot.add_fancy_msg_hook /^\.source$/, '.source' do
   say_chan 'My home: ' + $config['source_url']
 end
 
 # show feeds subscribed in this channel
-bot.add_msg_hook /^\.feeds/, '.feeds' do
+bot.add_fancy_msg_hook /^\.feeds/, '.feeds' do
   say_chan "Feeds: " + $feeds.select { |f| f[:channels].include?(where) }
                              .map { |f| f[:url] }.join(", ")
 end
 
 answers = ['No.', 'Yes.', 'Bitch pls.']
-bot.add_msg_hook /^\.8ball\s/, '.8ball' do
+bot.add_fancy_msg_hook /^\.8ball\s/, '.8ball' do
   say_chan 'The Magic 8 Ball says: %s' % answers.sample
 end
 
 # fetch Mensa menu
 menu = Mensa::Menu.new
-bot.add_msg_hook /^\.mensa(?:\s+(.*))?$/, '.mensa' do |args|
+bot.add_fancy_msg_hook /^\.mensa(?:\s+(.*))?$/, '.mensa' do |args|
   args = args ? args.split : []
   day = Date.today
 
@@ -158,7 +158,7 @@ end
 # seatping shortcut
 locations = { 'audimax' => 1, 'gerthsen' => 2, 'hsaf' => 3 }
 seatping_url = 'http://dev.cbcdn.com/seatping/?last=90&hall=%s'
-bot.add_msg_hook /^\.sp(\s.*)?/, '.sp' do |loc|
+bot.add_fancy_msg_hook /^\.sp(\s.*)?/, '.sp' do |loc|
   loc &&= locations[loc.strip.downcase]
   if loc
     say_chan seatping_url % loc
@@ -170,7 +170,7 @@ end
 # fetch the title of pasted URLs
 agent = Mechanize.new
 agent.user_agent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)"
-bot.add_msg_hook /(https?:\/\/\S+)/, 'HTTP URLs (will fetch title)' do |url|
+bot.add_fancy_msg_hook /(https?:\/\/\S+)/, 'HTTP URLs (will fetch title)' do |url|
   begin
     page = agent.get(url)
     title = page.at('title').text.gsub(/\s+/, ' ').strip
@@ -184,7 +184,7 @@ bot.add_msg_hook /(https?:\/\/\S+)/, 'HTTP URLs (will fetch title)' do |url|
 end
 
 # enable use of s/foo/bar syntax to correct mistakes
-bot.add_msg_hook /^s\/([^\/]*)\/([^\/]*)\/?$/, 's/x/y/ substitution' do |pattern, subst|
+bot.add_fancy_msg_hook /^s\/([^\/]*)\/([^\/]*)\/?$/, 's/x/y/ substitution' do |pattern, subst|
   pattern = Regexp.new(pattern)
   result = messages.filter(channel: where)
                    .exclude(:message.like("s/%"))
