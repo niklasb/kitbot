@@ -56,10 +56,10 @@ Say something in the given channel. The `text` POST parameter is used as the mes
 
 ### Webhooks
 
-You can register a webhook (HTTP callback) for certain events in a channel:
+You can register a webhook (HTTP callback) for certain events on the server:
 
-* `message`: Triggered if a message is sent.
-* `join`: Triggered if a user joins or if the bot enters the channel for the
+* `message`: Triggered if a message is sent in a channel.
+* `join`: Triggered if a user joins or if the bot enters a channel for the
   first time
 * `part`: Triggered if a user leaves the channel
 * `topic`: Triggered if the topic is changed
