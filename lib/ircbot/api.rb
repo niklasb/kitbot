@@ -122,6 +122,7 @@ class WebRPC < Sinatra::Base
 
     post '/messages' do
       @bot.say params[:text], @channel
+      json true
     end
 
     post '/hooks/:type' do |type|
