@@ -7,6 +7,7 @@ require 'pry'
 require 'sequel'
 require 'uri'
 require 'thin'
+require 'eventmachine'
 
 $: << File.expand_path('../lib', __FILE__)
 
@@ -202,31 +203,33 @@ Thread.abort_on_exception = true
 # add webhooks
 IrcBot::Webhooks.new(bot, db).register
 
-# start feed watchers in background
-$feeds.each do |config|
-  Thread.new do
-    begin
-      FeedWatcher.new([config[:url]], config[:interval] || 60).run do |entry|
-        msg = entry.instance_exec(&config[:formatter])
-        config[:channels].each do |chan|
-          bot.say msg, chan
+EM.run do
+  # start bot in background
+  bot.start($config['server'])
+  $config['channels'].each { |chan| bot.join(chan) }
+
+  # start feed watchers in background
+  $feeds.each do |config|
+    Thread.new do
+      begin
+        FeedWatcher.new([config[:url]], config[:interval] || 60).run do |entry|
+          msg = entry.instance_exec(&config[:formatter])
+          config[:channels].each do |chan|
+            bot.say msg, chan
+          end
         end
+      rescue => e
+        $stderr.puts "Exception in feed thread: %s" % e.inspect
+        $stderr.puts e.backtrace
       end
-    rescue => e
-      $stderr.puts "Exception in feed thread: %s" % e.inspect
-      $stderr.puts e.backtrace
     end
   end
-end
 
-# start bot in background
-bot.start($config['server'])
-$config['channels'].each { |chan| bot.join(chan) }
-
-# start API server in background
-Thread.new do
-  Thin::Server.start($config['api_host'], $config['api_port'],
-                     IrcBot::WebRPC.new(bot, db))
+  # start API server in background
+  Thread.new do
+    Thin::Server.start($config['api_host'], $config['api_port'],
+                      IrcBot::WebRPC.new(bot, db))
+  end
 end
 
 # start an interactive shell in the main thread :)
