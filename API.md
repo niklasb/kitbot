@@ -20,7 +20,7 @@ List of users in the given channel:
 
 Number of users in the given channel:
 
-    $ curl --user user:pass http://bot.kitinfo.de:1337/channel/kitinfo/usercount
+    $ curl --user user:pass http://bot.kitinfo.de:1337/channel/kitinfo/users/count
     24
 
 ---
