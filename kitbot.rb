@@ -231,7 +231,9 @@ EM.run do
                       IrcBot::WebRPC.new(bot, db))
   end
 
-  # start an interactive shell in the main thread :)
-  binding.pry
-  exit
+  Thread.new do
+    # start an interactive shell
+    binding.pry
+    exit
+  end
 end
