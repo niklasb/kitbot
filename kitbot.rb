@@ -230,7 +230,8 @@ EM.run do
     Thin::Server.start($config['api_host'], $config['api_port'],
                       IrcBot::WebRPC.new(bot, db))
   end
-end
 
-# start an interactive shell in the main thread :)
-binding.pry
+  # start an interactive shell in the main thread :)
+  binding.pry
+  exit
+end
