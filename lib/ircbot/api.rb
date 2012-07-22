@@ -99,6 +99,17 @@ class WebRPC < Sinatra::Base
     authorize!
   end
 
+  namespace %r{/user/(?:[^/]+)} do
+    before do
+      @user = request.fullpath.split('/')[2]
+    end
+
+    post '/messages' do
+      @bot.say params[:text], @user
+      json true
+    end
+  end
+
   namespace %r{/channel/(?:[^/]+)} do
     before do
       @channel = '#' + request.fullpath.split('/')[2]

@@ -54,6 +54,15 @@ Say something in the given channel. The `text` POST parameter is used as the mes
     $ curl --user user:pass -d text=bla \
                   http://bot.kitinfo.de:1337/channel/kitinfo/messages
 
+---
+
+    POST /user/:nick/messages
+
+Query a user. The `text` POST parameter is used as the message:
+
+    $ curl --user user:pass -d text=bla \
+                  http://bot.kitinfo.de:1337/user/niklasb/messages
+
 ### Webhooks
 
 You can register a webhook (HTTP callback) for certain events on the server:
