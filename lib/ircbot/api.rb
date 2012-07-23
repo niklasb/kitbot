@@ -101,9 +101,9 @@ class WebRPC < Sinatra::Base
     authorize!
   end
 
-  namespace %r{/user/(?:[^/]+)} do
+  namespace %r{/user/([^/]+)} do
     before do
-      @user = request.fullpath.split('/')[2]
+      @user = params[:captures][0]
     end
 
     post '/messages' do
@@ -112,9 +112,9 @@ class WebRPC < Sinatra::Base
     end
   end
 
-  namespace %r{/channel/(?:[^/]+)} do
+  namespace %r{/channel/([^/]+)} do
     before do
-      @channel = '#' + request.fullpath.split('/')[2]
+      @channel = '#' + params[:captures][0]
     end
 
     get '/users' do
