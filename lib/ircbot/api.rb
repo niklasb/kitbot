@@ -1,6 +1,7 @@
 require 'sinatra'
 require 'sinatra/namespace'
 require 'sinatra-miniauth'
+require 'sinatra-async'
 require 'json'
 require 'digest'
 require 'eventmachine'
@@ -79,6 +80,7 @@ class Webhooks
 end
 
 class WebRPC < Sinatra::Base
+  include Sinatra::AsyncRequests
   include Sinatra::MinimalAuthentication
   register Sinatra::Namespace
 
