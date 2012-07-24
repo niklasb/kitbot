@@ -3,6 +3,14 @@
 The web service is secured by HTTP basic authentication. All responses are
 [JSON](http://www.json.org) encoded.
 
+### General usage
+
+Every command listed below is synchronous, that is, it returns only after 
+it completed its task. In some cases, a user might not be interested in the 
+actual outcome of an action. In those cases, one can prefix the command with
+`/async` (e.g. `POST /async/channel/kitinfo/messages`). The API will then send
+an empty response immediately after it received the request.
+
 ### Commands
 
 ---
