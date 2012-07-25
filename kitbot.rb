@@ -24,7 +24,7 @@ $config = File.open(ARGV[0]) { |f| YAML::load(f) }
 bot = IrcBot::Bot.new($config['nick'])
 
 # set up DB
-db = Sequel.connect($config['database'])
+$db = db = Sequel.connect($config['database'])
 Sequel.extension :migration
 Sequel::Migrator.run(db, File.expand_path('../db/migrations', __FILE__))
 
@@ -232,6 +232,20 @@ EM.run do
   end
 
   Thread.new do
+    # define some helper functions for the interactive shell
+    def join_users(a, b)
+      stats = $db[:stats]
+      stats.where(user: b).each do |item|
+        other = stats.where(user: a, date: item[:date])
+        if other.count > 0
+          other.update(characters: :characters + item[:characters], words: :words + item[:words])
+        else
+          stats.where(user: b, date: item[:date]).update(user: a)
+        end
+      end
+      stats.where(user: b).delete
+    end
+
     # start an interactive shell
     binding.pry
     exit
