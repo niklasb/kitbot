@@ -1,6 +1,8 @@
-top_users: 5
+top_users: 10
 nick: Kitbot
 server: irc.freenode.org
+masters:
+- niklasb
 channels:
 - '#kitinfo'
 date_format: '%d.%m.%Y'

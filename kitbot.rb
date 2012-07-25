@@ -30,6 +30,7 @@ Sequel::Migrator.run(db, File.expand_path('../db/migrations', __FILE__))
 
 stats = db[:stats]
 messages = db[:messages]
+aliases = db[:aliases]
 
 def format_time(datetime)
   datetime.strftime(datetime.is_a?(Date) ? $config['date_format']
@@ -51,7 +52,12 @@ bot.add_fancy_msg_hook // do
     words = msg.split.size
     chars = msg.size
 
-    key = {channel: where, user: who, date: Date.today}
+    user = who
+    if item = aliases.where(alias: user).first
+      user = item[:user]
+    end
+
+    key = {channel: where, user: user, date: Date.today}
     rec = stats.where(*key)
     if 1 != rec.update(characters: :characters + chars,
                        words: :words + words)
@@ -60,7 +66,7 @@ bot.add_fancy_msg_hook // do
   end
 end
 
-# Commands
+# User commands
 #========================
 
 # highscore link
@@ -198,6 +204,39 @@ bot.add_fancy_msg_hook %r{^s/([^/]*)/([^/]*)/?$}, 's/x/y/ substitution' do |patt
                         result[:message].gsub(pattern, subst)]
 end
 
+# Control commands
+#=====================
+
+def join_stats_users(stats, a, b)
+  stats.where(user: b).each do |item|
+    other = stats.where(user: a, date: item[:date])
+    if other.count > 0
+      other.update(characters: :characters + item[:characters], words: :words + item[:words])
+    else
+      stats.where(user: b, date: item[:date]).update(user: a)
+    end
+  end
+  stats.where(user: b).delete
+end
+
+bot.add_fancy_msg_hook /^\.addalias\s+(\S+)\s+(\S.+)$/, 'add nick aliases' do |user, names|
+  if $config['masters'].include?(who)
+    names.split.each do |alias_|
+      next if alias_ == user
+      results = aliases.where(alias: alias_)
+      if results.count > 0
+        results.update(alias: alias_, user: user)
+      else
+        aliases.insert(alias: alias_, user: user)
+      end
+      join_stats_users(stats, user, alias_)
+    end
+    say_chan 'Aliases created successfully'
+  else
+    say_chan 'This command is only available to important people'
+  end
+end
+
 Thread.abort_on_exception = true
 
 # add webhooks
@@ -232,20 +271,6 @@ EM.run do
   end
 
   Thread.new do
-    # define some helper functions for the interactive shell
-    def join_users(a, b)
-      stats = $db[:stats]
-      stats.where(user: b).each do |item|
-        other = stats.where(user: a, date: item[:date])
-        if other.count > 0
-          other.update(characters: :characters + item[:characters], words: :words + item[:words])
-        else
-          stats.where(user: b, date: item[:date]).update(user: a)
-        end
-      end
-      stats.where(user: b).delete
-    end
-
     # start an interactive shell
     binding.pry
     exit
