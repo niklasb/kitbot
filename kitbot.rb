@@ -171,7 +171,7 @@ end
 # fetch the title of pasted URLs
 agent = Mechanize.new
 agent.user_agent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)"
-bot.add_fancy_msg_hook /(https?:\/\/\S+)/, 'HTTP URLs (will fetch title)' do |url|
+bot.add_fancy_msg_hook %r{(https?://\S+)}, 'HTTP URLs (will fetch title)' do |url|
   begin
     page = agent.get(url)
     title = page.at('title').text.gsub(/\s+/, ' ').strip
@@ -185,7 +185,7 @@ bot.add_fancy_msg_hook /(https?:\/\/\S+)/, 'HTTP URLs (will fetch title)' do |ur
 end
 
 # enable use of s/foo/bar syntax to correct mistakes
-bot.add_fancy_msg_hook /^s\/([^\/]*)\/([^\/]*)\/?$/, 's/x/y/ substitution' do |pattern, subst|
+bot.add_fancy_msg_hook %r{^s/([^/]*)/([^/]*)/?$}, 's/x/y/ substitution' do |pattern, subst|
   pattern = Regexp.new(pattern)
   result = messages.filter(channel: where)
                    .exclude(:message.like("s/%"))
