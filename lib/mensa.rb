@@ -25,12 +25,13 @@ module Mensa
       tables = @doc.css("#platocontent > table")
       captions = tables.map { |t| t.xpath("preceding::h1").last.text }
       dates = captions.map { |c| Date.strptime(c.split.last, "%d.%m.") }
-      menus = @doc.css("#platocontent > table").map { |t| parse_day_table(t) }
+      menus = tables.map { |t| parse_day_table(t) }
       Hash[dates.zip(menus)]
     end
 
     def parse_day_table(table)
       Hash[table.xpath('./tr').map(&:children)
+                .select { |children| !children.empty? }
                 .map { |left, right| [left.text.gsub('Linie ', 'L'),
                                       parse_line_table(right)] }
                 .reject { |_, meals| meals.empty? }
