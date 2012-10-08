@@ -139,7 +139,7 @@ bot.add_fancy_msg_hook /^\.mensa(?:\s+(.*))?$/, '.mensa' do |args|
   begin
     lines = menu[day]
   rescue => e
-    $stderr.puts 'Error while fetching mensa data: %s' % [url, e.inspect]
+    $stderr.puts 'Error while fetching mensa data: %s' % e.inspect
     $stderr.puts e.backtrace
     next
   end
