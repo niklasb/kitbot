@@ -39,7 +39,7 @@ end
 
 $feeds = [
   { channels: $config['channels'],
-    url: 'http://dev.cbcdn.com/seatping/?rss',
+    url: 'http://seatping.kitinfo.de/?rss',
     formatter: lambda { 'Seatping alert! %s checked in: %s' % [author, url] } },
 ]
 
