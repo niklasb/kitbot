@@ -192,16 +192,20 @@ end
 
 # enable use of s/foo/bar syntax to correct mistakes
 bot.add_fancy_msg_hook %r{^s/([^/]*)/([^/]*)/?$}, 's/x/y/ substitution' do |pattern, subst|
-  pattern = Regexp.new(pattern)
-  result = messages.filter(channel: where)
-                   .exclude(:message.like("s/%"))
-                   .order(:time)
-                   .last(20)
-                   .find { |rec| rec[:message] =~ pattern }
-  next unless result
+  begin
+    pattern = Regexp.new(pattern)
+  rescue
+  else
+    result = messages.filter(channel: where)
+                    .exclude(:message.like("s/%"))
+                    .order(:time)
+                    .last(20)
+                    .find { |rec| rec[:message] =~ pattern }
+    next unless result
 
-  say_chan "<%s> %s" % [result[:user],
-                        result[:message].gsub(pattern, subst)]
+    say_chan "<%s> %s" % [result[:user],
+                          result[:message].gsub(pattern, subst)]
+  end
 end
 
 # Control commands
