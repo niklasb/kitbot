@@ -138,7 +138,7 @@ class WebRPC < Sinatra::Base
       json true
     end
 
-    post '/hooks/:type' do |type|
+    post '/hooks/:type' do |_, type|
       halt 404, "Invalid hook type" unless ['message', 'join', 'part', 'topic'].include?(type)
 
       argument = case type
