@@ -156,7 +156,7 @@ bot.add_fancy_msg_hook /^\.mensa(?:\s+(.*))?$/, '.mensa' do |args|
   say_chan "Menu for %s" % format_time(day)
   lines.each do |line, meals|
     next unless queries.any? { |query| line =~ /^#{query}/i }
-    interesting_meals = meals.select { |_, price, _| price >= 100 }
+    interesting_meals = meals.select { |_, price, _| price >= 110 }
     next if interesting_meals.empty?
     say_chan "%s: %s" % [line, interesting_meals.map { |name, price, price_note|
                               "%s (%s%.2f)" % [name,
