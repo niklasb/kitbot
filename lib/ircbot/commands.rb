@@ -10,10 +10,14 @@ module IrcBot::Commands
     end
   end
 
-  def join(channel)
+  def join(channel, password=nil)
     synchronize do
       wait_for_line(/^:#{@nick}(!\S+)\s+JOIN\s+:?#{channel}/i) do
-        cmd_join channel
+        if password
+          cmd_join channel, password
+        else
+          cmd_join channel
+        end
       end
     end
   end

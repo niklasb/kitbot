@@ -1,10 +1,12 @@
 top_users: 10
 nick: Kitbot
 server: irc.freenode.org
+port: 6697
+use_ssl: true
 masters:
 - niklasb
 channels:
-- '#kitinfo'
+- ['#kitctf-private', '<redacted>']
 date_format: '%d.%m.%Y'
 time_format: '%d.%m.%Y %H:%M'
 stats_url: http://bot.kitinfo.de/stats/%s
@@ -12,3 +14,7 @@ source_url: https://github.com/niklasb/kitbot
 api_host: 0.0.0.0
 api_port: 1337
 database: sqlite://db/kitbot.sqlite3
+slack_team: kitctf
+slack_api_token: <redacted>
+slack_forward_channel: '#bottest'
+slack_username: 'Kitbot'

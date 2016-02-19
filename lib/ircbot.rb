@@ -1,6 +1,7 @@
+require 'monitor'
+require 'openssl'
 require 'socket'
 require 'test/unit/assertions'
-require 'monitor'
 
 module IrcBot; end
 require 'ircbot/line_based'
@@ -25,8 +26,16 @@ module IrcBot
       init_hooks
     end
 
-    def start(server, port=6667)
+    def start(server, port=6667, ssl=false)
       @conn = TCPSocket.open(server, port)
+      @ssl = ssl
+      if ssl
+        ctx = OpenSSL::SSL::SSLContext.new
+        ctx.set_params(verify_mode: OpenSSL::SSL::VERIFY_PEER)
+        @conn = OpenSSL::SSL::SSLSocket.new(@conn, ctx)
+        @conn.sync_close = true
+        @conn.connect
+      end
       Thread.new { main_loop }
       identify
     end
@@ -42,7 +51,11 @@ module IrcBot
     end
 
     def write(data)
-      @conn.send(data, 0)
+      if @conn.is_a?(OpenSSL::SSL::SSLSocket)
+        @conn.write(data)
+      else
+        @conn.send(data, 0)
+      end
     end
 
     def synchronize(&block)

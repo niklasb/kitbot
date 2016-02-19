@@ -64,6 +64,17 @@ bot.add_fancy_msg_hook // do
       stats.insert(key.merge({ characters: chars, words: words }))
     end
   end
+
+  # send to slack
+  unless msg =~ /^\./ 
+    browser = Mechanize.new
+    browser.post('https://slack.com/api/chat.postMessage', {
+      'token' => $config['slack_api_token'],
+      'channel' => $config['slack_forward_channel'],
+      'text' => msg,
+      'username' => $config['slack_username'],
+    })
+  end
 end
 
 # User commands
@@ -248,8 +259,8 @@ IrcBot::Webhooks.new(bot, db).register
 
 EM.run do
   # start bot in background
-  bot.start($config['server'])
-  $config['channels'].each { |chan| bot.join(chan) }
+  bot.start($config['server'], $config['port'], $config['use_ssl'])
+  $config['channels'].each { |*chan, pw| bot.join(chan, pw) }
 
   # start feed watchers in background
   $feeds.each do |config|
