@@ -1,7 +1,7 @@
 source :rubygems
 gem "nokogiri"
 gem "pry"
-gem "feedzirra"
+gem "feedjira"
 gem "mechanize"
 gem "sequel"
 gem "sqlite3"
@@ -12,3 +12,4 @@ gem "json"
 gem "haml"
 gem "eventmachine"
 gem "dynamic_binding", :git => "git://github.com/niklasb/ruby-dynamic-binding.git"
+gem "websocket-eventmachine-client", :git => "https://github.com/imanel/websocket-eventmachine-client"

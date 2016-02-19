@@ -15,6 +15,7 @@ require 'feedwatch'
 require 'ircbot'
 require 'ircbot/api'
 require 'mensa'
+require 'slack'
 
 unless ARGV.size == 1
   $stderr.puts "Usage: #{$0} config_file"
@@ -43,6 +44,8 @@ $feeds = [
     formatter: lambda { 'Seatping alert! %s checked in: %s' % [author, url] } },
 ]
 
+$slack = SlackApi.new($config['slack_api_token'])
+
 # log
 bot.add_fancy_msg_hook // do
   messages.insert(channel: where, user: who, time: Time.now, message: msg)
@@ -59,21 +62,10 @@ bot.add_fancy_msg_hook // do
 
     key = {channel: where, user: user, date: Date.today}
     rec = stats.where(*key)
-    if 1 != rec.update(characters: :characters + chars,
-                       words: :words + words)
+    if 1 != rec.update(characters: Sequel.expr(:characters) + chars,
+                       words: Sequel.expr(:words) + words)
       stats.insert(key.merge({ characters: chars, words: words }))
     end
-  end
-
-  # send to slack
-  unless msg =~ /^\./ 
-    browser = Mechanize.new
-    browser.post('https://slack.com/api/chat.postMessage', {
-      'token' => $config['slack_api_token'],
-      'channel' => $config['slack_forward_channel'],
-      'text' => msg,
-      'username' => $config['slack_username'],
-    })
   end
 end
 
@@ -219,6 +211,11 @@ bot.add_fancy_msg_hook %r{^s/([^/]*)/([^/]*)/?$}, 's/x/y/ substitution' do |patt
   end
 end
 
+# irc -> slack
+bot.add_fancy_msg_hook /^\.slack\s+(.*)?$/, '.stats' do |msg|
+  $slack.post_message(msg, $config['slack_forward_channel'], $config['slack_username'])
+end
+
 # Control commands
 #=====================
 
@@ -226,7 +223,9 @@ def join_stats_users(stats, a, b)
   stats.where(user: b).each do |item|
     other = stats.where(user: a, date: item[:date])
     if other.count > 0
-      other.update(characters: :characters + item[:characters], words: :words + item[:words])
+      other.update(
+          characters: Sequel.expr(:characters) + item[:characters], 
+          words: Sequel.expr(:words) + item[:words])
     else
       stats.where(user: b, date: item[:date]).update(user: a)
     end
@@ -260,7 +259,33 @@ IrcBot::Webhooks.new(bot, db).register
 EM.run do
   # start bot in background
   bot.start($config['server'], $config['port'], $config['use_ssl'])
-  $config['channels'].each { |*chan, pw| bot.join(chan, pw) }
+  $config['channels'].each { |chan| bot.join(*chan) }
+ 
+  # slack -> irc bridge
+  ws = $slack.rtm
+
+  ws.onopen do
+    puts "Connected to Slack RTM API"
+  end
+
+  ws.onmessage do |msg, type|
+    msg = JSON.parse(msg)
+    if msg['type'] == 'message'
+      slack_chan = $slack.channel_info(msg['channel'])      
+      if slack_chan['ok'] != false 
+        $config['channels'].each do |chan|
+          user = $slack.user_info(msg['user'])['user']
+          if user
+            bot.say '#%s <%s> %s' % [slack_chan['channel']['name'], user ? user['name'] : '???', msg['text']], chan[0]
+          end
+        end
+      end
+    end
+  end
+
+  ws.onclose do |code, reason|
+    $stderr.puts "Disconnected with status code: #{code}"
+  end
 
   # start feed watchers in background
   $feeds.each do |config|

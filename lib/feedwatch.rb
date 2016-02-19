@@ -1,4 +1,4 @@
-require 'feedzirra'
+require 'feedjira'
 require 'set'
 
 class FeedError < Exception; end
@@ -13,7 +13,7 @@ class FeedWatcher
   end
 
   def parse_feed(url)
-    Feedzirra::Feed.fetch_and_parse(url).tap do |res|
+    Feedjira::Feed.fetch_and_parse(url).tap do |res|
       raise FeedError, "Invalid response" if res.is_a?(Fixnum)
     end
   end
